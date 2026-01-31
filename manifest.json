@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Script Keeper",
+  "version": "1.2.2",
+  "description": "Floating popup window with ticket macros.",
+  "permissions": [
+    "scripting",
+    "tabs",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Open Ticket Tool",
+    "default_icon": {
+      "16": "icon.png",
+      "32": "icon.png",
+      "48": "icon.png"
+    }
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}
