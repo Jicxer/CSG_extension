@@ -1,0 +1,29 @@
+v2.0.0
+	Fixed multiple spelling errors
+	Added multiple selection to several areas in Faults Present: and Results: for the NCR tab
+	Added Cassette drop downs to the Hyosung tab
+v2.1.0
+	Bug fixes - fixed repeat comma issue
+	Added Option Group headers to the multip0le selection area to make navigating them easier
+	Set buttons to Outset to make them easier to see
+	Set several area of text to Strong to make it easier to see
+	Moved the Up and in Service/Down and out of Service buttons to near the top of the app
+v2.1.1
+	Bug fixes - several areas not adding values to atmNotes
+		  - several areas not clearing with Reset button
+	
+v2.2.0 
+	Added color variation and visual indicators to NCR tab dropdowns for easier navigation
+	Removed the Diebold tab as we service almost no Diebolds anymore
+	Removed the Fixed but not Verified option as this was deprecated
+	Added a new Result button for qualifying time when we cleared a fault but haven't seen a good transaction of that device type
+		button is called 'after diagnostic testing...'
+	Updated the 'Choose Limited Module' section in the Hyosung tab to consistent with the NCR tab
+v2.2.1
+	Deleted old code that got uncommented and displayed a button that is no longer used
+	Fixed issue with Hyosung 'after diagnostic testing...' showing up in the NCR tab when it should be in the Hyosung tab
+v2.2.2
+	Hyosung tab was not adding cassette status values to notes, resolved
+	Noticed some buttons being too close or too far apart, resolved
+	Noticed some colors and symbols that were inconsistent or missing, resolved
+	
