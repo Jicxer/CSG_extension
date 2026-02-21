@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ATMNoteBuilder</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+  <link rel="stylesheet" href="_css/atmNoteBuilder.css">
+  <script src="_js/atmNoteBuilder.js"></script>
+</head>
+<body>
+
+ <div id="tabs" style="background-color:#ddd">
+  <ul>
+    <li><a href="#ncrTab" class="tab noselect"><img src="_images/ncr-logo.png" alt="NCR" style="height: 40px; width: 145px;"></a></li>
+    <li><a href="#hyosungTab"  class="tab noselect"><img src="_images/hyosung-logo.png" alt="Hyosung" style="height: 40px; width: 145px;"></a></li>
+  </ul> 
+	<div id="ncrTab" name="ncrTab" style="display: block">
+	<hr style="margin-left: 15px; margin-right: 15px; margin-top:0px; margin-bottom:0px; padding-top:6px; background-color: #3A3A3A;">
+	<div class="row">
+	<div class="column left">
+		<div class="inLineBlock">
+		  <p class="noselect" style="float: left"><strong>Last fault of this type: </strong></p>
+		  <input type="text" class="dateTime" style="float: left">
+		<div class="ck-button"><label for="lastFaultsNA">
+			<input type="checkbox" name="lastFaultsNA" id="lastFaultsNA" class="lastFaultsNA" value="None"  />
+			<span class="noselect"><strong>None</strong></span></label>
+		</div><!--end ck-button-->
+		</div><!--end inLineBlock-->
+		<hr>
+		<div class="inLineBlock">
+	  	<div class="ck-button up"><label for="up">
+			<input type="radio" name="workDone" id="up" class="up" value="up and in service at login. "  />
+			<span class="noselect"><strong>up (in service)</strong></span></label>
+	 	</div><!--end ck-button-->
+		<div class="ck-button down"><label for="down">
+			<input type="radio" name="workDone" id="down" class="down" value="down and out of service at login. "  />
+			<span class="noselect"><strong>down (out of service) </strong></span></label>
+		</div><!--end ck-button-->
+		</div><!--end inLineBlock-->
+		<hr>
+		<div class=" button1 button2 hideFaults">
+		  <p class="noselect"><strong>- Faults Present: </strong></p>
+		</div><!--end hideFaults-->
+		<div class="Fpanel" >
+		<div class="inLineBlock">
+		<div class="ck-button"><label for="faultsNA">
+				<input type="checkbox" name="faultsNA" id="faultsNA" class="faultsNA" value="None"  />
+				<span class="noselect"><strong>None</strong></span></label>
+		</div><!--end ck-button-->
+		</div><!--end inLineBlock-->
+		<div class="button1 button2 ch">
+		  <p class="noselect"><strong>= Dispenser: </strong></p>
+		</div><!--slide panel button-->
+		<div class="panel">
+			<div class="button1 button2 cas buttonStyle">
+				<p class="noselect"><strong>≡ Cassettes</strong></p>
+			</div><!--slide panel button-->
+			<div class="cassettesPanel">
+				<select multiple size="8" name="cassettes" class="dropdownCSS cassetteTop">
+					<optgroup label="Top cassette">
+						<option value=" Top cassette low">&#9864; Top cassette low</option>
+						<option value=" Top cassette empty">&#9864; Top cassette empty</option>
+						<option value=" Top cassette removed">&#9864; Top cassette removed</option>
+						<option value=" Top cassette too many pick failures">&#9864; Top cassette too many pick failures</option>
+						<option value=" Top cassette not latched correctly">&#9864; Top cassette not latched correctly</option></optgroup>
+					<optgroup label="Cassette 1">
+						<option value=" Cassette 1 low">&#9864; Cassette 1 low</option>
+						<option value=" Cassette 1 empty">&#9864; Cassette 1 empty</option>
+						<option value=" Cassette 1 removed">&#9864; Cassette 1 removed</option>
+						<option value=" Cassette 1 too many pick failures">&#9864; Cassette 1 too many pick failures</option>
+						<option value=" Cassette 1 not latched correctly">&#9864; Cassette 1 not latched correctly</option></optgroup>
+					<optgroup label="Cassette 2">
+						<option value=" Cassette 2 low">&#9864; Cassette 2 low</option>
+						<option value=" Cassette 2 empty">&#9864; Cassette 2 empty</option>
+						<option value=" Cassette 2 removed">&#9864; Cassette 2 removed</option>
+						<option value=" Cassette 2 too many pick failures">&#9864; Cassette 2 too many pick failures</option>
+						<option value=" Cassette 2 not latched correctly">&#9864; Cassette 2 not latched correctly</option></optgroup>
+					<optgroup label="Cassette 3">
+						<option value=" Cassette 3 low">&#9864;Cassette 3 low</option>
+						<option value=" Cassette 3 empty">&#9864;Cassette 3 empty</option>
+						<option value=" Cassette 3 removed">&#9864;Cassette 3 removed</option>
+						<option value=" Cassette 3 too many pick failures">&#9864;Cassette 3 too many pick failures</option>
+						<option value=" Cassette 3 not latched correctly">&#9864;Cassette 3 not latched correctly</option></optgroup>
+					<optgroup label="Cassette 4">
+						<option value=" Cassette 4 low">&#9864;Cassette 4 low</option>
+						<option value=" Cassette 4 empty">&#9864;Cassette 4 empty</option>
+						<option value=" Cassette 4 removed">&#9864;Cassette 4 removed</option>
+						<option value=" Cassette 4 too many pick failures">&#9864;Cassette 4 too many pick failures</option>
+						<option value=" Cassette 4 not latched correctly">&#9864;Cassette 4 not latched correctly</option></optgroup>
+					<optgroup label="Cassette 5">
+						<option value=" Cassette 5 low">&#9864;Cassette 5 low</option>
+						<option value=" Cassette 5 empty">&#9864;Cassette 5 empty</option>
+						<option value=" Cassette 5 removed">&#9864;Cassette 5 removed</option>
+						<option value=" Cassette 5 too many pick failures">&#9864;Cassette 5 too many pick failures</option>
+						<option value=" Cassette 5 not latched correctly">&#9864;Cassette 5 not latched correctly</option></optgroup>
+					<optgroup label="Cassette 6">
+						<option value=" Cassette 6 low">&#9864;Cassette 6 low</option>
+						<option value=" Cassette 6 empty">&#9864;Cassette 6 empty</option>
+						<option value=" Cassette 6 removed">&#9864;Cassette 6 removed</option>
+						<option value=" Cassette 6 too many pick failures">&#9864;Cassette 6 too many pick failures</option>
+						<option value=" Cassette 6 not latched correctly">&#9864;Cassette 6 not latched correctly</option></optgroup>
+					<optgroup label="Bottom cassette">
+						<option value=" Bottom cassette low">&#9864;Bottom cassette low</option>
+						<option value=" Bottom cassette empty">&#9864;Bottom cassette empty</option>
+						<option value=" Bottom cassette removed">&#9864;Bottom cassette removed</option>
+						<option value=" Bottom cassette too many pick failures">&#9864;Bottom cassette too many pick failures</option>
+						<option value=" Bottom cassette not latched correctly">&#9864;Bottom cassette not latched correctly</option></optgroup></select>
+			</div><!-- end cassettesPanel -->
+			<div class="button1 button2 bin buttonStyle">
+				<p class="noselect"><strong>≡ Dispenser Bins</strong></p>
+			</div><!--slide panel button-->
+			<div class="binPanel">
+				<select multiple size="8" name="bins" class="dropdownCSS purgeBin">
+					<optgroup label="Purge bin">
+						<option value=" Purge bin nearly full">&#9864;Purge bin nearly full</option>
+						<option value=" Purge bin full">&#9864;Purge bin full</option>
+						<option value=" Purge removed">&#9864;Purge removed</option></optgroup>
+					<optgroup label="Retract bin">
+						<option value=" Retract bin nearly full">&#9864;Retract bin nearly full</option>
+						<option value=" Retract bin full">&#9864;Retract bin full</option>
+						<option value=" Retract removed">&#9864;Retract removed</option></optgroup>
+					<optgroup label="Reject bin">
+						<option value=" Reject bin nearly full">&#9864;Reject bin nearly full</option>
+						<option value=" Reject bin full">&#9864;Reject bin full</option>
+						<option value=" Reject removed">&#9864;Reject removed</option></optgroup>
+					<optgroup label="Divert bin">
+						<option value=" Divert bin nearly full">&#9864;Divert bin nearly full</option>
+						<option value=" Divert bin full">&#9864;Divert bin full</option>
+						<option value=" Divert removed">&#9864;Divert removed</option></optgroup></select>
+			</div><!-- end binPanel -->
+			<div class="button1 button2 jaf buttonStyle">
+				<p class="noselect"><strong>≡ Jams and Failures</strong></p>
+			</div><!--slide panel button-->
+			<div class="jafPanel">
+			<select multiple size="8" name="jaf" class="dropdownCSS jams">
+				<option value=" Cash handler attention required">&#9864;Cash handler attention required</option>
+				<option value=" Cash handler presenter interlock disconnected">&#9864;Cash handler presenter interlock disconnected</option>
+				<option value=" Cash handler too many rejects">&#9864;Cash handler too many rejects</option>
+				<option value=" Cash handler too many bad items picked">&#9864;Cash handler too many bad items picked</option>
+				<option value=" Cash handler invalid pre-LVDT interrupt">&#9864;Cash handler invalid pre-LVDT interrupt</option>
+				<option value=" Cash handler unrecoverable media jam between pick mod and SNT">&#9864;Cash handler unrecoverable media jam between pick mod and SNT</option>
+				<option value=" Cash handler unrecoverable media jam in the SNT">&#9864;Cash handler unrecoverable media jam in the SNT</option>
+				<option value=" Cash handler shutter jammed open">&#9864;Cash handler shutter jammed open</option>
+				<option value=" Cash handler shutter jammed closed">&#9864;Cash handler shutter jammed closed</option>
+				<option value=" Cash handler carriage-media jam at the exit sensor">&#9864;Cash handler carriage-media jam at the exit sensor</option>
+				<option value=" Cash handler carriage-media jam at the entry sensor">&#9864;Cash handler carriage-media jam at the entry sensor</option>
+				<option value=" Cash handler shutter jammed open or sensor failed">&#9864;Cash handler shutter jammed open or sensor failed</option>
+				<option value=" Cash handler shutter jammed closed or sensor failed">&#9864;Cash handler shutter jammed closed or sensor failed</option>
+				<option value=" Cash handler top pick unit media jam at pick sensor">&#9864;Cash handler top pick unit media jam at pick sensor</option>
+				<option value=" Cash handler 2nd pick unit media jam at pick sensor">&#9864;Cash handler 2nd pick unit media jam at pick sensor</option>
+				<option value=" Cash handler 3rd pick unit media jam at pick sensor">&#9864;Cash handler 3rd pick unit media jam at pick sensor</option>
+				<option value=" Cash handler 4th pick unit media jam at pick sensor">&#9864;Cash handler 4th pick unit media jam at pick sensor</option>
+				<option value=" Cash handler 5th pick unit media jam at pick sensor">&#9864;Cash handler 5th pick unit media jam at pick sensor</option>
+				<option value=" Cash handler bottom pick unit media jam at pick sensor">&#9864;Cash handler bottom pick unit media jam at pick sensor</option>
+				<option value=" Cash handler note jam or transport sensor 1 failure">&#9864;Cash handler note jam or transport sensor 1 failure</option>
+				<option value=" Cash handler note jam or transport sensor 2 failure">&#9864;Cash handler note jam or transport sensor 2 failure</option>
+				<option value=" Cash handler note jam or transport sensor 3 failure">&#9864;Cash handler note jam or transport sensor 3 failure</option>
+				<option value=" Cash handler note jam or transport sensor 4 failure">&#9864;Cash handler note jam or transport sensor 4 failure</option>
+				<option value=" Cash handler note jam or transport sensor 5 failure">&#9864;Cash handler note jam or transport sensor 5 failure</option>
+				<option value=" Cash handler note jam between pick modules and the pre-LVDT">&#9864;Cash handler note jam between pick modules and the pre-LVDT</option>
+				<option value=" Cash handler invalid pick sensor interrupt in top pick module">&#9864;Cash handler invalid pick sensor interrupt in top pick module</option>
+				<option value=" Cash handler invalid pick sensor interrupt in 2nd pick module">&#9864;Cash handler invalid pick sensor interrupt in 2nd pick module</option>
+				<option value=" Cash handler invalid pick sensor interrupt in 3rd pick module">&#9864;Cash handler invalid pick sensor interrupt in 3rd pick module</option>
+				<option value=" Cash handler invalid pick sensor interrupt in 4th pick module">&#9864;Cash handler invalid pick sensor interrupt in 4th pick module</option>
+				<option value=" Cash handler invalid pick sensor interrupt in 5th pick module">&#9864;Cash handler invalid pick sensor interrupt in 5th pick module</option>
+				<option value=" Cash handler invalid pick sensor interrupt in bottom pick module">&#9864;Cash handler invalid pick sensor interrupt in bottom pick module</option>
+				<option value=" Cash handler top pick module too many sensor state changes">&#9864;Cash handler top pick module too many sensor state changes</option>
+				<option value=" Cash handler 2nd pick module too many sensor state changes">&#9864;Cash handler 2nd pick module too many sensor state changes</option>
+				<option value=" Cash handler 3rd pick module too many sensor state changes">&#9864;Cash handler 3rd pick module too many sensor state changes</option>
+				<option value=" Cash handler 4th pick module too many sensor state changes">&#9864;Cash handler 4th pick module too many sensor state changes</option>
+				<option value=" Cash handler 5th pick module too many sensor state changes">&#9864;Cash handler 5th pick module too many sensor state changes</option>
+				<option value=" Cash handler bottom pick module too many sensor state changes">&#9864;Cash handler bottom pick module too many sensor state changes</option></select>
+			</div><!-- end jafPanel -->
+		<hr>
+		</div><!--end slide panel-->
+		<div class=" button1 button2 coin">
+		  <p class="noselect"><strong>= Coin Hoppers: </strong></p>
+		</div><!--slide panel button-->
+		<div class="Cpanel">
+			<select multiple size="8" name="coin" class="dropdownCSS coin1">
+				<optgroup label="Coin Hopper 1">
+				<option value=" Coin hopper 1 low">&#9864;Coin hopper 1 low</option>
+				<option value=" Coin hopper 1 empty">&#9864;Coin hopper 1 empty</option>
+				<option value=" Coin hopper 1 removed">&#9864;Coin hopper 1 removed</option>
+				<option value=" Coin hopper 1 dispense jam or low">&#9864;Coin hopper 1 dispense jam or low</option>
+				<option value=" Coin hopper 1 dispense jam or empty">&#9864;Coin hopper 1 dispense jam or empty</option></optgroup>
+				<optgroup label="Coin Hopper 2">
+				<option value=" Coin hopper 2 low">&#9864;Coin hopper 2 low</option>
+				<option value=" Coin hopper 2 empty">&#9864;Coin hopper 2 empty</option>
+				<option value=" Coin hopper 2 removed">&#9864;Coin hopper 2 removed</option>
+				<option value=" Coin hopper 2 dispense jam or low">&#9864;Coin hopper 2 dispense jam or low</option>
+				<option value=" Coin hopper 2 dispense jam or empty">&#9864;Coin hopper 2 dispense jam or empty</option></optgroup>
+				<optgroup label="Coin Hopper 3">
+				<option value=" Coin hopper 3 low">&#9864;Coin hopper 3 low</option>
+				<option value=" Coin hopper 3 empty">&#9864;Coin hopper 3 empty</option>
+				<option value=" Coin hopper 3 removed">&#9864;Coin hopper 3 removed</option>
+				<option value=" Coin hopper 3 dispense jam or low">&#9864;Coin hopper 3 dispense jam or low</option>
+				<option value=" Coin hopper 3 dispense jam or empty">&#9864;Coin hopper 3 dispense jam or empty</option></optgroup>
+				<optgroup label="Coin Hopper 4">
+				<option value=" Coin hopper 4 low">&#9864;Coin hopper 4 low</option>
+				<option value=" Coin hopper 4 empty">&#9864;Coin hopper 4 empty</option>
+				<option value=" Coin hopper 4 removed">&#9864;Coin hopper 4 removed</option>
+				<option value=" Coin hopper 4 dispense jam or low">&#9864;Coin hopper 4 dispense jam or low</option>
+				<option value=" Coin hopper 4 dispense jam or empty">&#9864;Coin hopper 4 dispense jam or empty</option></optgroup></select>
+		<hr>
+		</div><!--end slide panel-->
+		<div class="button1 button2 hideDep">
+		  <p class="noselect"><strong>= Depositor</strong>: </p>
+		</div><!--slide panel button-->
+		<div class="depPanel">
+			<div class="button1 button2 sdm buttonStyle">
+				<p class="noselect"><strong>≡ SDM Faults</strong></p>
+			</div><!--slide panel button-->
+			<div class="sdmPanel">
+				<select multiple size="8" name="sdm" class="dropdownCSS" >
+				<option value=" SDM cheque container removed">&#9864;SDM cheque container removed</option>
+				<option value=" SDM cash container remove">&#9864;SDM cash container removed</option>
+				<option value=" SDM cash container door open">&#9864;SDM cash container door open</option>
+				<option value=" SDM storage bin removed">&#9864;SDM storage bin removed</option>
+				<option value=" SDM retract bin removed">&#9864;SDM retract bin removed</option>
+				<option value=" SDM Attention Required">&#9864;SDM attention required</option>
+				<option value=" SDM interlock open">&#9864;SDM interlock open</option>
+				<option value=" SDM transport guide open">&#9864;SDM transport guide open</option>
+				<option value=" SDM shutter jammed open">&#9864;SDM shutter jammed open</option>
+				<option value=" SDM shutter jammed closed">&#9864;SDM shutter jammed closed</option>
+				<option value=" SDM retract bin door 1 open">&#9864;SDM retract bin door 1 open</option>
+				<option value=" SDM BV jam">&#9864;SDM BV jam</option>
+				<option value=" SDM DVM jam">&#9864;SDM DVM jam</option>
+				<option value=" SDM ERBM jam">&#9864;SDM ERBM jam</option>
+				<option value=" SDM escrow jam">&#9864;SDM escrow jam</option>
+				<option value=" SDM rebunch jam">&#9864;SDM rebunch jam</option>
+				<option value=" SDM rebunch note jam">&#9864;SDM rebunch note jam</option>
+				<option value=" SDM feeder jam">&#9864;SDM feeder jam</option>
+				<option value=" SDM infeed jam">&#9864;SDM infeed jam</option>
+				<option value=" SDM core jam">&#9864;SDM core jam</option>
+				<option value=" SDM core or lower transport jam">&#9864;SDM core or lower transport jam</option>
+				<option value=" SDM cash bin full">&#9864;SDM cash bin full</option>
+				<option value=" SDM cash bin full soon">&#9864;SDM cash bin full soon</option>
+				<option value=" SDM capture bin jam">&#9864;SDM capture bin jam</option>
+				<option value=" SDM capture bin unavailable">&#9864;SDM capture bin unavailable</option>
+				<option value=" SDM retract bin 1 removed">&#9864;SDM retract bin 1 removed</option>
+				<option value=" SDM retract bin 1 full">&#9864;SDM retract bin 1 full</option>
+				<option value=" SDM retract bin 1 full soon">&#9864;SDM retract bin 1 full soon</option>
+				<option value=" SDM retract bin 1 door open">&#9864;SDM retract bin 1 door open</option>
+				<option value=" SDM retract bin 2 removed">&#9864;SDM retract bin 2 removed</option>
+				<option value=" SDM retract bin 2 full">&#9864;SDM retract bin 2 full</option>
+				<option value=" SDM retract bin 2 full soon">&#9864;SDM retract bin 2 full soon</option>
+				<option value=" SDM retract bin 2 door open">&#9864;SDM retract bin 2 door open</option>
+				<option value=" SDM storage bin 1 removed">&#9864;SDM storage bin 1 removed</option>
+				<option value=" SDM storage bin 1 full">&#9864;SDM storage bin 1 full</option>
+				<option value=" SDM storage bin 1 full soon">&#9864;SDM storage bin 1 full soon</option>
+				<option value=" SDM storage bin 1 door open">&#9864;SDM storage bin 1 door open</option>
+				<option value=" SDM storage bin 2 removed">&#9864;SDM storage bin 2 removed</option>
+				<option value=" SDM storage bin 2 full">&#9864;SDM storage bin 2 full</option>
+				<option value=" SDM storage bin 2 full soon">&#9864;SDM storage bin 2 full soon</option>
+				<option value=" SDM storage bin 2 door open">&#9864;SDM storage bin 2 door open</option></select>
+			</div><!-- end sdmPanel -->
+			<div class="button1 button2 sdm2 buttonStyle" style="margin-bottom: 7px;">
+				<p class="noselect"><strong>≡ SDM 2 Faults</strong></p>
+			</div><!--slide panel button-->
+			<div class="sdm2Panel">
+			<select multiple size="8" name="sdm2" class="dropdownCSS" >
+				<option value=" SDM2 cheque container removed">&#9864;SDM2 cheque container removed</option>
+				<option value=" SDM2 cash container removed">&#9864;SDM2 cash container removed</option>
+				<option value=" SDM2 cash container door open">&#9864;SDM2 cash container door open</option>
+				<option value=" SDM2 storage bin removed">&#9864;SDM2 storage bin removed</option>
+				<option value=" SDM2 retract bin removed">&#9864;SDM2 retract bin removed</option>
+				<option value=" SDM2 Attention Required">&#9864;SDM2 attention required</option>
+				<option value=" SDM2 interlock open">&#9864;SDM2 interlock open</option>
+				<option value=" SDM2 transport guide open">&#9864;SDM2 transport guide open</option>
+				<option value=" SDM2 shutter jammed open">&#9864;SDM2 shutter jammed open</option>
+				<option value=" SDM2 shutter jammed closed">&#9864;SDM2 shutter jammed closed</option>
+				<option value=" SDM2 retract bin door 1 open">&#9864;SDM2 retract bin door 1 open</option>
+				<option value=" SDM2 BV jam">&#9864;SDM2 BV jam</option>
+				<option value=" SDM2 DVM jam">&#9864;SDM2 DVM jam</option>
+				<option value=" SDM2 ERBM jam">&#9864;SDM2 ERBM jam</option>
+				<option value=" SDM2 escrow jam">&#9864;SDM2 escrow jam</option>
+				<option value=" SDM2 rebunch jam">&#9864;SDM2 rebunch jam</option>
+				<option value=" SDM2 rebunch note jam">&#9864;SDM2 rebunch note jam</option>
+				<option value=" SDM2 feeder jam">&#9864;SDM2 feeder jam</option>
+				<option value=" SDM2 infeed jam">&#9864;SDM2 infeed jam</option>
+				<option value=" SDM2 core jam">&#9864;SDM2 core jam</option>
+				<option value=" SDM2 core or lower transport jam">&#9864;SDM2 core or lower transport jam</option>
+				<option value=" SDM2 cash bin full">&#9864;SDM2 cash bin full</option>
+				<option value=" SDM2 cash bin full soon">&#9864;SDM2 cash bin full soon</option>
+				<option value=" SDM2 capture bin jam">&#9864;SDM2 capture bin jam</option>
+				<option value=" SDM2 capture bin unavailable">&#9864;SDM2 capture bin unavailable</option>
+				<option value=" SDM2 retract bin 1 removed">&#9864;SDM2 retract bin 1 removed</option>
+				<option value=" SDM2 retract bin 1 full">&#9864;SDM2 retract bin 1 full</option>
+				<option value=" SDM2 retract bin 1 full soon">&#9864;SDM2 retract bin 1 full soon</option>
+				<option value=" SDM2 retract bin 1 door open">&#9864;SDM2 retract bin 1 door open</option>
+				<option value=" SDM2 retract bin 2 removed">&#9864;SDM2 retract bin 2 removed</option>
+				<option value=" SDM2 retract bin 2 full">&#9864;SDM2 retract bin 2 full</option>
+				<option value=" SDM2 retract bin 2 full soon">&#9864;SDM2 retract bin 2 full soon</option>
+				<option value=" SDM2 retract bin 2 door open">&#9864;SDM2 retract bin 2 door open</option>
+				<option value=" SDM2 storage bin 1 removed">&#9864;SDM2 storage bin 1 removed</option>
+				<option value=" SDM2 storage bin 1 full">&#9864;SDM2 storage bin 1 full</option>
+				<option value=" SDM2 storage bin 1 full soon">&#9864;SDM2 storage bin 1 full soon</option>
+				<option value=" SDM2 storage bin 1 door open">&#9864;SDM2 storage bin 1 door open</option>
+				<option value=" SDM2 storage bin 2 removed">&#9864;SDM2 storage bin 2 removed</option>
+				<option value=" SDM2 storage bin 2 full">&#9864;SDM2 storage bin 2 full</option>
+				<option value=" SDM2 storage bin 2 full soon">&#9864;SDM2 storage bin 2 full soon</option>
+				<option value=" SDM2 storage bin 2 door open">&#9864;SDM2 storage bin 2 door open</option></select>
+			</div><!-- end sdm2Panel -->
+			<select name="scpm" class="dropdownCSS" >
+				<option value="">SCPM faults</option>
+				<option value=" SCPM interlock open">&#9864;SCPM interlock open</option>
+				<option value=" SCPM internal cheque jam">&#9864;SCPM internal cheque jam</option>
+				<option value=" SCPM internal cheque jam">&#9864;SCPM internal cheque jam</option>
+				<option value=" SCPM transport jam">&#9864;SCPM transport jam</option>
+				<option value=" SCPM feeder jam">&#9864;SCPM feeder jam</option></select>
+			<select name="scpm2" class="dropdownCSS" >
+				<option value="">SCPM2 faults</option>
+				<option value=" SCPM2 interlock open">&#9864;SCPM2 interlock open</option>
+				<option value=" SCPM2 internal cheque jam">&#9864;SCPM2 internal cheque jam</option>
+				<option value=" SCPM2 transport jam">&#9864;SCPM2 transport jam</option>
+				<option value=" SCPM2 transport jam">&#9864;SCPM2 transport jam</option>
+				<option value=" SCPM2 transport jam">&#9864;SCPM2 transport jam</option>
+				<option value=" SCPM2 feeder jam">&#9864;SCPM2 feeder jam</option></select>
+			<select name="bna" class="dropdownCSS" >
+				<option value="">BNA faults</option>
+				<option value=" BNA attention required">&#9864;BNA attention required</option>
+				<option value=" BNA Note bin full">&#9864;BNA note bin full</option>
+				<option value=" BNA transport jam">&#9864;BNA transport jam</option>
+				<option value=" BNA reject unit jam">&#9864;BNA reject unit jam</option>
+				<option value=" BNA validator jam">&#9864;BNA validator jam</option>
+				<option value=" BNA feed unit jam">&#9864;BNA feed unit jam</option>
+				<option value=" BNA Note bin full">&#9864;BNA note bin full</option></select>
+			<select name="ed" class="dropdownCSS" >
+				<option value="">Envelope Depositor faults</option>
+				<option value=" ED attention required">&#9864;ED attention required</option>
+				<option value=" ED envelope hopper almost empty">&#9864;ED envelope hopper almost empty</option>
+				<option value=" ED envelope jam in transport">&#9864;ED envelope jam in transport</option>
+				<option value=" ED envelope jam in transport at entry sensor">&#9864;ED envelope jam in transport at entry sensor</option>
+				<option value=" ED envelope jam in transport at exit sensor">&#9864;ED envelope jam in transport at exit sensor</option>
+				<option value=" ED envelope jam in transport at anti-phish sensor">&#9864;ED envelope jam in transport at anit-phish sensor</option>
+				<option value=" ED printhead incorrectly or not fitted">&#9864;ED printhead incorrectly or not fitted</option>
+				<option value=" ED new printhead found">&#9864;ED new printhead found</option>
+				<option value=" ED printhead ink low or near end of life">&#9864;ED printhead ink low or near end of life</option></select>
+			<div class="button1 button2 dmisc buttonStyle">
+					<p class="noselect"><strong>≡ Depositor Misc</strong></p>
+			</div><!--slide panel button-->
+			<div class="depmiscPanel">
+				<select multiple name="dmisc" class="dropdownCSS" >
+					<option value=" Depository shutter jammed open">&#9864;Depository shutter jammed open</option>
+					<option value=" Depository shutter jammed closed">&#9864;Depository shutter jammed closed</option>
+					<option value=" Depository replace printhead soon">&#9864;Depository replace printhead soon</option>
+					<option value=" CPM4 attention required">&#9864;CPM4 attention required</option></select>
+			</div><!-- end depmiscPanel-->
+		<hr>
+		</div><!--end Fpanel-->
+		<div class=" button1 button2 hideRec">
+		  <p class="noselect"><strong>= Receipt Printer: </strong></p>
+		</div><!--end hideFaults-->
+		<div class="Recpanel" >	
+			<select multiple name="rec" class="dropdownCSS" >
+				<option value=" Receipt printer attention required">&#9864;Receipt printer attention required</option>
+				<option value=" Receipt printer eject jam">&#9864;Receipt printer eject jam</option>
+				<option value=" Receipt printer exit jam on eject">&#9864;Receipt printer exit jam on eject</option>
+				<option value=" Receipt printer transport jam on eject">&#9864;Receipt printer transport jam on eject</option>
+				<option value=" Receipt printer dual feed mechanism jam">&#9864;Receipt printer dual feed mechanism jam</option>
+				<option value=" Receipt printer paper out">&#9864;Receipt printer paper out</option>
+				<option value=" Receipt printer front or rear paper low">&#9864;Receipt printer front or rear paper low</option>
+				<option value=" Receipt printer paper not loaded">&#9864;Receipt printer paper not loaded</option>
+				<option value=" Receipt printer front/rear hopper not loaded">&#9864;Receipt printer front/rear hopper not loaded</option></select>
+		</div><!--end Recpanel-->
+		<div class=" button1 button2 hideCard">
+		  <p class="noselect"><strong>=  Reader: </strong></p>
+		</div><!--end hideFaults-->
+		<div class="Cardpanel" >
+		<select name="card" class="dropdownCSS" >
+			<option value="">Card Reader faults</option>
+			<option value=" IMCRW attention required">&#9864;IMCRW attention required</option>
+			<option value=" Contactless card reader attention required">&#9864;Contactless card reader attention required</option>
+			<option value=" DASH card reader attention required">&#9864;DASH card reader attention required</option>
+			<option value=" DIP card reader attention required">&#9864;DIP card reader attention required</option>
+			<option value=" DIP magnetic readhead fault">&#9864;DIP magnetic readhead fault</option></select>
+		</div><!--end Cardpanel-->
+		<div class=" button1 button2 hideEPP">
+		  <p class="noselect"><strong>= EPP</strong>: </p>
+		</div><!--end hideFaults-->
+		<div class="EPPpanel" >
+		<select name="epp" class="dropdownCSS" >
+			<option value="">EPP faults</option>
+			<option value=" EPP attention required">&#9864;EPP attention required</option>
+			<option value=" EPP keys not loaded">&#9864;EPP keys not loaded</option>
+			<option value=" EPP2 attention required">&#9864;EPP2 attention required</option>
+			<option value=" EPP2 keys not loaded">&#9864;EPP2 keys not loaded</option></select>
+		</div><!--end EPPpanel-->
+		<div class=" button1 button2 misc">
+		  <p class="noselect"><strong>= ATM Misc: </strong></p>
+		</div><!--end hideFaults-->
+		<div class="miscPanel" >	
+			<select multiple size="7" name="misc" class="dropdownCSS" >	
+				<option value=" Monitor attention required">&#9864;Monitor attention required</option>
+				<option value=" Miscellaneous interface attention required">&#9864;Miscellaneous interface attention required</option>
+				<option value=" ASM unusual object detected">&#9864;ASM unusual object detected</option>
+				<option value=" ASM attention required">&#9864;ASM attention required</option>
+				<option value=" MEEI attention required">&#9864;MEEI attention required</option>
+				<option value=" HID UPS attention required">&#9864;HID UPS attention required</option>
+				<option value=" Electronic document scanner attention required">&#9864;Electronic document scanner attention required</option></select>
+				</div><!-- end miscpanel -->
+		</div><!--end Fpanel-->	
+		<hr>
+		<div class="button1 button2 hideTests">
+		  <p class="noselect"><strong>- Entered supervisor mode. Ran test(s) on </strong></p>
+		</div>
+		<div class="Spanel">
+		<select name="tests" class="dropdownCSS dispenser" >
+			<option value="">Dispenser</option>
+			<option value="Dispenser (test passed)">&#9864;Dispenser (test passed)</option>
+			<option value="Dispenser (test passed multiple times)">&#9864;Dispenser (test passed multiple times)</option>
+			<option value="Dispenser (test failed)">&#9864;Dispenser (test failed)</option></select>
+		<select name="tests" class="dropdownCSS sdm" >
+			<option value="">Depositor</option>
+			<option value="Depositor (test incomplete but did not fail)">&#9864;Depositor (test incomplete but did not fail)</option>
+			<option value="Depositor (test failed)">&#9864;Depositor (test failed)</option></select>
+		<select name="tests" class="dropdownCSS RP" >
+			<option value="">Receipt printer</option>
+			<option value="Receipt printer (test passed)">&#9864;Receipt printer (test passed)</option>
+			<option value="Receipt printer (test failed)">&#9864;Receipt printer (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">ASM</option>
+			<option value="ASM (test passed)">&#9864;ASM (test passed)</option>
+			<option value="ASM (test failed)">&#9864;ASM (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">MEEI</option>
+			<option value="MEEI (test passed)">&#9864;MEEI (test passed)</option>
+			<option value="MEEI (test failed)">&#9864;MEEI (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">EPP</option>
+			<option value="EPP (test incomplete but did not fail)">&#9864;EPP (test incomplete but did not fail)</option>
+			<option value="EPP (test failed)">&#9864;EPP (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">EPP2</option>
+			<option value="EPP2 (test incomplete but did not fail)">&#9864;EPP2 (test incomplete but did not fail)</option>
+			<option value="EPP2 (test failed)">&#9864;EPP2 (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">DIP Card reader</option>
+			<option value="DIP card reader (test incomplete but did not fail)">&#9864;DIP card reader (test incomplete but did not fail)</option>
+			<option value="DIP card reader (test failed)">&#9864;DIP card reader (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">DASH Card reader</option>
+			<option value="DASH card reader (test incomplete but did not fail)">&#9864;DASH card reader (test incomplete but did not fail)</option>
+			<option value="DASH card reader (test failed)">&#9864;DASH card reader (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">Contactless Card reader</option>
+			<option value="Contactless card reader (test incomplete but did not fail)">&#9864;Contactless card reader (test incomplete but did not fail)</option>
+			<option value="Contactless card reader (test failed)">&#9864;Contactless card reader (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">Contactless Card reader 2</option>
+			<option value="Contactless card reader 2 (test incomplete but did not fail)">&#9864;Contactless card reader 2 (test incomplete but did not fail)</option>
+			<option value="Contactless card reader 2 (test failed)">&#9864;Contactless card reader 2 (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">IMCRW</option>
+			<option value="IMCRW (test incomplete but did not fail)">&#9864;IMCRW (test incomplete but did not fail)</option>
+			<option value="IMCRW (test failed), ">&#9864;IMCRW (test failed), </option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">HID UPS</option>
+			<option value="HID UPS (test passed)">&#9864;HID UPS (test passed)</option>
+			<option value="HID UPS (test failed)">&#9864;HID UPS (test failed)</option></select>
+		<select name="tests" class="dropdownCSS" >
+			<option value="">Electronic Document Scanner</option>
+			<option value="Electronic document scanner (test passed)">&#9864;Electronic document scanner (test passed)</option>
+			<option value="Electronic document scanner (test failed)">&#9864;Electronic document scanner (test failed)</option></select>
+		<hr>
+		<div class="button1 button2 hideCleared">
+		  <p class="noselect"><strong>= Faults cleared </strong></p>
+		</div>
+		<div class="FCpanel">
+			<select name="tests" class="dropdownCSS invalidSen" >
+				<option value="">Invalid Sensor</option>
+				<option value="Dispenser: invalid sensor (faults cleared)">&#9864;Dispenser: invalid sensor (faults cleared)</option>
+				<option value="Dispenser: invalid sensor (faults not cleared)">&#9864;Dispenser: invalid sensor (faults not cleared)</option></select>
+			<select name="tests" class="dropdownCSS pickFaultCleared" >
+				<option value="">Pick faults</option>
+				<option value="Dispenser: pick faults (faults cleared)">&#9864;Dispenser: pick faults (faults cleared)</option>
+				<option value="Dispenser: pick faults (faults not cleared)">&#9864;Dispenser: pick faults (faults not cleared)</option></select>
+			<select name="tests" class="dropdownCSS dispenserJam" >
+				<option value="">Note Jam</option>
+				<option value="Dispenser: note jam (faults cleared)">&#9864;Dispenser: note jam (faults cleared)</option>
+				<option value="Dispenser: note jam (faults not cleared)">&#9864;Dispenser: note jam (faults not cleared)</option></select>
+			<select name="tests" class="dropdownCSS shutterJam" >
+				<option value="">Shutter Jam</option>
+				<option value="Shutter jam (faults cleared)">&#9864;Shutter jam (faults cleared)</option>
+				<option value="Shutter jam (faults not cleared)">&#9864;Shutter jam (faults not cleared)</option></select>
+			<select name="tests" class="dropdownCSS sdmJam" >
+				<option value="">Depositor Jam</option>
+				<option value="Depositor jam (faults cleared)">&#9864;Depositor jam (faults cleared)</option>
+				<option value="Depositor jam (faults not cleared)">&#9864;Depositor jam (faults not cleared)</option></select>
+			<select name="tests" class="dropdownCSS RP" >
+				<option value="">Recipt Printer Jam</option>
+				<option value="Receipt printer jam (faults cleared)">&#9864;Receipt printer jam (faults cleared)</option>
+				<option value="Receipt printer jam (faults not cleared)">&#9864;Receipt printer jam (faults not cleared)</option></select>
+			<select name="tests" class="dropdownCSS CRD" >
+				<option value="">Card Reader fault</option>
+				<option value="Card Reader faults (faults cleared)">&#9864;Card Reader faults (faults cleared)</option>
+				<option value="Card Reader faults (faults not cleared)">&#9864;Card Reader faults (faults not cleared)</option></select>
+			<select name="tests" class="dropdownCSS EPP" >
+				<option value="">EPP fault</option>
+				<option value="EPP faults (faults cleared)">&#9864;EPP faults (faults cleared)</option>
+				<option value="EPP faults (faults not cleared)">&#9864;EPP faults (faults not cleared)</option>
+			    <option value="EPP2 faults (faults cleared)">&#9864;EPP2 faults (faults cleared)</option>
+				<option value="EPP2 faults (faults not cleared)">&#9864;EPP2 faults (faults not cleared)</option></select>
+			<hr>
+		</div><!--end hideCleared-->
+	</div><!--end hideTests-->
+	<hr>
+	<div class=" button1 button2 hideResults">
+	  <p class="noselect"><strong>- Result: </strong></p>
+	</div>
+	<div class="Rpanel">
+		<div class="inLineBlock;">
+		<div class="ck-button"><label for="ter"> 
+			<input type="checkbox" name="result" id="ter" class="ter" value="Terminal is up and in service "  />
+			<span class="noselect"><strong>Terminal is up and in service</strong></span></label>
+		</div><!--end ck-button-->
+		<div class="ck-button"><label for="noFaults"> 
+			<input type="checkbox" name="result" id="noFaults" class="noFaults" value="with no faults"  />
+			<span class="noselect"><strong>with no faults</strong></span></label>
+		</div><!--end ck-button-->
+		<div class="ck-button terLim"><label for="terLim"> 
+			<input type="checkbox" name="result" id="terLim" class="terLim" value="Terminal is up but in limited service and may be unable to "  />
+			<span class="noselect"><strong>Terminal is up but in limited...</strong></span></label>
+		</div><!--end ck-button-->
+		<div class="ck-button terLim"><label for="terDown"> 
+			<input type="checkbox" name="result" id="terDown" class="terDown" value="Terminal is down and out of service"  />
+			<span class="noselect"><strong>Terminal is down and out of service</strong></span></label>
+		</div><!--end ck-button-->
+		<br/>
+		<div class="button1 button2 lim buttonStyle">
+			<p class="noselect"><strong>= Choose Limited Module</strong></p>
+		</div><!--slide panel button-->
+		<div class="limPanel">
+			<select multiple size="8" name="pickLim" class="dropdownCSS pickLim" >
+				<optgroup label="...and may be unable to">
+					<option value="print receipts">&#9864;print receipts</option>
+					<option value="dispense cash">&#9864;dispense cash</option>
+					<option value="accept deposits">&#9864;accept deposits</option></optgroup>
+				<optgroup label="...or">
+					<option value=" or print receipts">&#9864;print receipts</option>
+					<option value=" or dispense cash">&#9864;dispense cash</option>
+					<option value=" or accept deposits">&#9864;accept deposits</option></optgroup></select>
+		</div><!-- end limPanel -->
+		</div><!--end inLineBlock-->
+	</div><!--end hideResults-->
+	<hr>
+	<div class="inLineBlock">
+	  <p class="noselect" style="float: left;"><strong>ATM in service with the network: </strong></p>
+	  <div class="ck-button" style="text-align: center;"><label for="Nyes">
+			<input type="radio" name="network" id="Nyes" class="Nyes" value="Yes" />
+			<span class="noselect"><strong>Yes</strong></span></label>
+	  </div><!--end ck-button-->
+		<div class="ck-button" style="text-align: center;"><label for="Nno">	
+			<input type="radio" name="network" id="Nno" class="Nno" value="No" />
+			<span class="noselect"><strong>No</strong></span></label>
+		</div><!--end ck-button-->
+	</div><!--end inLineBlock-->
+	<hr>
+	<div class="inLineBlock">
+	  <p class="noselect" style="float: left;"><strong>Fixed/Not Fixed: </strong></p>
+	  <div class="ck-button"><label for="fixed" >
+			<input type="radio" name="fix" id="fixed" class="fixed" value="fixed"  />
+			<span class="noselect"><strong>fixed</strong></span></label>
+	  </div><!--end ck-button-->
+		<div class="ck-button"><label for="notFixed" >
+			<input type="radio" name="fix" id="notFixed" class="notFixed" value="not fixed" />
+			<span class="noselect"><strong>not fixed</strong></span></label>
+		</div><!--end ck-button-->
+		<!--end ck-button-->
+	</div><!--end inLineBlock-->
+	<hr>
+	<input type="button" value="Add" class="button1 button2 addResults" style=" font-size: 20px">
+	<input type="button" value="Clear" class="button1 button2 clear" style=" font-size: 20px">
+	<input type="button" value="Reset" class="button1 button2 resetAtmNotes" style=" font-size: 20px;">
+	<img noselect src="_images/csg-logo.png" alt="" style="display: block; float:left; height:200px; width200px;">
+	</div><!--end column left-->
+	<div class="column right">
+	<input type="button" value="Update Clipboard" class="button1 button2 updateClip" style=" font-size: 18px">
+	<textarea class="atmNotes" placeholder="ATM Notes" style="width: 100%;" rows="23"></textarea>
+	</div><!--end column right-->
+	</div><!--end row-->
+	<hr style="margin-left: 15px; margin-right: 15px; margin-top:0px; margin-bottom:0px; padding-top:6px; background-color: #3A3A3A;">
+	</div><!--end NCR-->
+	
+	
+<!--***********************************************************************
+***************************************************************************
+************************************************************************-->	
+	
+	
+	<div id="hyosungTab" style=" display: block">
+	<hr style="margin-left: 15px; margin-right: 15px; margin-top:0px; margin-bottom:0px; padding-top:6px; background-color: #3A3A3A;">
+	<div class="row">
+	<div class="column left">
+		<div class="inLineBlock">
+		  <p class="noselect" style="float: left"><strong>Last fault of this type: </strong></p>
+		  <input type="text" class="HdateTime" style="float: left">
+		<div class="ck-button"><label for="HfaultsNA2">
+				<input type="checkbox" name="HfaultsNA2" id="HfaultsNA2" class="HfaultsNA2" value="None"  />
+				<span class="noselect"><strong>None</strong></span></label>
+		</div><!--end ck-button-->
+		</div><!--end inLineBlock-->
+		<hr>
+		<div class="button1 button2 Hfaults">
+		  <p class="noselect"><strong>Faults Present: </strong></p>
+		</div><!--slide panel button-->
+		<div class="Hpanel">
+			<div class="inLineBlock">
+				<div class="ck-button"><label for="HfaultsNA">
+					<input type="checkbox" name="HfaultsNA" id="HfaultsNA" class="HfaultsNA" value=" None"  />
+					<span class="noselect">None</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HCO" >
+					<input type="checkbox" name="Hfaults" id="HCO" class="HCO" value=" Cash out faults"  />
+					<span class="noselect" >Cash out fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HCI" >
+					<input type="checkbox" name="Hfaults" id="HCI" class="HCI" value=" Cash in fault"  />
+					<span class="noselect" >Cash in fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HPP">
+					<input type="checkbox" name="Hfaults" id="HPP" class="HPP" value=" Pin pad fault"  />
+					<span class="noselect">Pin pad fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HIDC" >
+					<input type="checkbox" name="Hfaults" id="HIDC" class="HIDC" value=" IDC fault"  />
+					<span class="noselect" >IDC fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HIDS" >
+					<input type="checkbox" name="Hfaults" id="HIDS" class="HIDS" value=" IDS fault"  />
+					<span class="noselect" >IDS fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HSPR" >
+					<input type="checkbox" name="Hfaults" id="HSPR" class="HSPR" value=" SPR fault"  />
+					<span class="noselect" >SPR fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HCAM" >
+					<input type="checkbox" name="Hfaults" id="HCAM" class="HCAM" value=" Camera fault"  />
+					<span class="noselect" >Camera fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HBCA" >
+					<input type="checkbox" name="Hfaults" id="HBCA" class="HBCA" value=" BCA fault"  />
+					<span class="noselect" >BCA fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HCCIM" >
+					<input type="checkbox" name="Hfaults" id="HCCIM" class="HCCIM" value=" CCIM fault"  />
+					<span class="noselect" >CCIM fault</span></label></div><!--end ck-button-->
+				<div class="ck-button"><label for="HMMA" >
+					<input type="checkbox" name="Hfaults" id="HMMA" class="HMMA" value=" MMA fault"  />
+					<span class="noselect" >MMA fault</span></label></div><!--end ck-button-->
+			</div><!--end inLineBlock-->
+			<div class="button1 button2 Hcas">
+				<p class="noselect"><strong>Cassettes: </strong></p>
+			</div><!--slide panel button-->
+			<div class="HcasPanel">
+				<select multiple size="8" name="Hcas" class="dropdownCSS Hcassette1">
+					<optgroup label="Cassette 1">
+						<option value=" Cassette 1 low">&#9864; Cassette 1 low</option>
+						<option value=" Cassette 1 empty">&#9864; Cassette 1 empty</option>
+						<option value=" Cassette 1 removed">&#9864; Cassette 1 removed</option>
+						<option value=" Cassette 1 fatal">&#9864; Cassette 1 fatal</option>
+					<optgroup label="Cassette 2">
+						<option value=" Cassette 2 low">&#9864; Cassette 2 low</option>
+						<option value=" Cassette 2 empty">&#9864; Cassette 2 empty</option>
+						<option value=" Cassette 2 removed">&#9864; Cassette 2 removed</option>
+						<option value=" Cassette 2 fatal">&#9864; Cassette 2 fatal</option>
+					<optgroup label="Cassette 3">
+						<option value=" Cassette 3 low">&#9864;Cassette 3 low</option>
+						<option value=" Cassette 3 empty">&#9864;Cassette 3 empty</option>
+						<option value=" Cassette 3 removed">&#9864; Cassette 3 removed</option>
+						<option value=" Cassette 3 fatal">&#9864;Cassette 3 fatal</option>
+					<optgroup label="Cassette 4">
+						<option value=" Cassette 4 low">&#9864;Cassette 4 low</option>
+						<option value=" Cassette 4 empty">&#9864;Cassette 4 empty</option>
+						<option value=" Cassette 4 removed">&#9864; Cassette 4 removed</option>
+						<option value=" Cassette 4 fatal">&#9864;Cassette 4 fatal</option>
+					<optgroup label="Cassette 5">
+						<option value=" Cassette 5 low">&#9864;Cassette 5 low</option>
+						<option value=" Cassette 5 empty">&#9864;Cassette 5 empty</option>
+						<option value=" Cassette 5 removed">&#9864; Cassette 5 removed</option>
+						<option value=" Cassette 5 fatal">&#9864;Cassette 5 fatal</option></select>
+			</div><!-- end of HcasPanel -->
+		</div><!--end slide panel-->
+		<hr>
+	<div class="inLineBlock">
+	  <p class="noselect" style="float: left;"><strong>Work done: Terminal was </strong></p>
+	  <div class="ck-button"><label for="Hup">
+			<input type="radio" name="HworkDone" id="Hup" class="Hup" value="up and in service at login. "  />
+			<span class="noselect"><strong>up (in service)</strong></span></label>
+		</div><!--end ck-button-->
+		<div class="ck-button"><label for="Hdown">
+			<input type="radio" name="HworkDone" id="Hdown" class="Hdown" value="down and out of service at login. "  />
+			<span class="noselect"><strong>down (out of service)</strong></span></label>
+		</div><!--end ck-button-->
+		</div><!--end inLineBlock-->
+		<hr>
+		<div class=" button1 button2 Hwork">
+		  <p class="noselect"><strong>Ran self tests, </strong></p>
+		</div><!--slide panel button-->
+		<div class="HTpanel">
+		<div class="inLineBlock">
+		<div class="ck-button"><label for="Hpassed">
+				<input type="checkbox" name="Htests" id="Hpassed" class="Hpassed" value="All self tests passed "  />
+				<span class="noselect"><strong>All self tests passed </strong></span></label>
+			</div><!--end ck-button-->
+			<div class="ck-button" ><label for="Hother">
+				<input type="checkbox" name="Htests" id="Hother" class="Hother" value="all other self tests passed "  />
+				<span class="noselect"><strong>all other self tests passed </strong></span></label>
+			</div><!--end ck-button-->
+		<select class="dropdownCSS Htests">
+			<option value="">Pin Pad</option>
+			<option value="Pin pad (test passed), ">&#9864;Pin pad (test passed)</option>
+			<option value="Pin pad (test passed), fault cleared, ">&#9864;Pin pad (test passed), fault cleared</option>
+			<option value="Pin pad (test failed), ">&#9864;Pin pad (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Cash Dispenser</option>
+			<option value="Cash dispenser (low cassette(s)), ">&#9864;Cash dispenser low cassette(s))</option>
+			<option value="Cash dispenser (test passed), ">&#9864;Cash dispenser (test passed)</option>
+			<option value="Cash dispenser (test passed), fault cleared, ">&#9864;Cash dispenser (test passed), fault cleared</option>
+			<option value="Cash dispenser (test failed), ">&#9864;Cash dispenser (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Doors</option>
+			<option value="Doors (test passed), ">&#9864;Doors (test passed)</option>
+			<option value="Doors (test passed), fault cleared, ">&#9864;Doors (test passed), fault cleared</option>
+			<option value="Doors (test failed), ">&#9864;Doors (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Card Reader</option>
+			<option value="Card reader (test passed), ">&#9864;Card reader (test passed)</option>
+			<option value="Card reader (test passed), fault cleared, ">&#9864;Card reader (test passed), fault cleared</option>
+			<option value="Card reader (test failed), ">&#9864;Card reader (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Receipt Printer</option>
+			<option value="Receipt printer (low paper), ">&#9864;Receipt printer (low paper)</option>
+			<option value="Receipt printer (test passed), ">&#9864;Receipt printer (test passed)</option>
+			<option value="Receipt printer (test passed), fault cleared, ">&#9864;Receipt printer (test passed), fault cleared</option>
+			<option value="Receipt printer (test failed), ">&#9864;Receipt printer (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Guide Lights</option>
+			<option value="Guide lights (test passed), ">&#9864;Guide lights (test passed)</option>
+			<option value="Guide lights (test passed), fault cleared, ">&#9864;Guide lights (test passed), fault cleared</option>
+			<option value="Guide lights (test failed), ">&#9864;Guide lights (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Sensors</option>
+			<option value="Sensors (test passed), ">&#9864;Sensors (test passed)</option>
+			<option value="Sensors (test passed), fault cleared, ">&#9864;Sensors (test passed), fault cleared</option>
+			<option value="Sensors (test failed), ">&#9864;Sensors (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Indicators</option>
+			<option value="Indicators (test passed), ">&#9864;Indicators (test passed)</option>
+			<option value="Indicators (test passed), fault cleared, ">&#9864;Indicators (test passed), fault cleared</option>
+			<option value="Indicators (test failed), ">&#9864;Indicators (test failed)</option></select>
+		<select class="dropdownCSS Htests">
+			<option value="">Auxilleries</option>
+			<option value="Auxilleries (test passed), ">&#9864;Auxilleries (test passed)</option>
+			<option value="Auxilleries (test passed), fault cleared, ">&#9864;Auxilleries (test passed), fault cleared</option>
+			<option value="Auxilleries (test failed), ">&#9864;Auxilleries (test failed)</option></select>	 
+		<select class="dropdownCSS Htests">
+			<option value="">Cash Acceptor</option>
+			<option value="Cash Acceptor (test passed), ">&#9864;Cash Acceptor (test passed)</option>
+			<option value="Cash Acceptor (test passed), fault cleared, ">&#9864;Cash Acceptor (test passed), fault cleared</option>
+			<option value="Cash Acceptor (test failed), ">&#9864;Cash Acceptor (test failed)</option></select>	
+		<select class="dropdownCSS Htests">
+			<option value="">Bulk Check Accptor</option>
+			<option value="Bulk Check Acceptor (test passed), ">&#9864;Bulk Check Acceptor (test passed)</option>
+			<option value="Bulk Check Acceptor (test passed), fault cleared, ">&#9864;Bulk Check Acceptor (test passed), fault cleared</option>
+			<option value="Bulk Check Acceptor (test failed), ">&#9864;Bulk Check Acceptor (test failed)</option></select>	 
+		<select class="dropdownCSS Htests">
+			<option value="">Mixed Media Accptor</option>
+			<option value="Mixed Media Acceptor (test passed), ">&#9864;Mixed Media Acceptor (test passed)</option>
+			<option value="Mixed Media Acceptor (test passed), fault cleared, ">&#9864;Mixed Media Acceptor (test passed), fault cleared</option>
+			<option value="Mixed Media Acceptor (test failed), ">&#9864;Mixed Media Acceptor (test failed)</option></select>	 
+	</div><!--end inLineBlock-->
+	</div><!--end slide panel-->
+	<hr>
+	<div class=" button1 button2 Hres">
+	  <p class="noselect"><strong>Result: </strong></p>
+	</div><!--slide panel button-->
+		<div class="HRpanel">
+		<div class="inLineBlock;">
+		<div class="ck-button"><label for="Hter"> 
+			<input type="checkbox" name="Hresult" id="Hter" class="Hter" value="Terminal is up and in service "  />
+			<span class="noselect"><strong>Terminal is up and in service</strong></span></label>
+		</div><!--end ck-button-->
+		<div class="ck-button"><label for="HnoFaults"> 
+			<input type="checkbox" name="Hresult" id="HnoFaults" class="HnoFaults" value="with no faults"  />
+			<span class="noselect"><strong>with no faults</strong></span></label>
+		</div><!--end ck-button-->
+		</div><!--end inLineBlock-->
+		<div class="ck-button"><label for="HterLim"> 
+			<input type="checkbox" name="Hresult" id="HterLim" class="HterLim" value="Terminal is up but in limited service and may be unable to "  />
+			<span class="noselect"><strong>Terminal is up but in limited...</strong></span></label>
+		</div><!--end ck-button-->
+		<br/>
+		<div class="button1 button2 Hlim buttonStyle">
+			<p class="noselect"><strong>= Choose Limited Module</strong></p>
+		</div><!--slide panel button-->
+		<div class="HlimPanel">
+			<select multiple size="8" name="HpickLim" class="dropdownCSS HpickLim" >
+				<optgroup label="...and may be unable to">
+					<option value="print receipts">&#9864;print receipts</option>
+					<option value="dispense cash">&#9864;dispense cash</option>
+					<option value="accept deposits">&#9864;accept deposits</option></optgroup>
+				<optgroup label="...or">
+					<option value=" or print receipts">&#9864;print receipts</option>
+					<option value=" or dispense cash">&#9864;dispense cash</option>
+					<option value=" or accept deposits">&#9864;accept deposits</option></optgroup></select>
+		</div><!-- end HlimPanel -->
+	</div><!--end slide panel-->
+	<hr>
+	<div class="inLineBlock">
+	  <p class="noselect" style="float: left;"><strong>ATM in service with the network: </strong></p>
+	  <div class="ck-button" style="text-align: center;"><label for="NHyes">
+			<input type="radio" name="Hnetwork" id="NHyes" class="NHyes" value="Yes" />
+			<span class="noselect"><strong>Yes</strong></span></label>
+	  </div><!--end ck-button-->
+		<div class="ck-button" style="text-align: center;"><label for="NHno">	
+			<input type="radio" name="Hnetwork" id="NHno" class="NHno" value="No" />
+			<span class="noselect"><strong>No</strong></span></label>
+		</div><!--end ck-button-->
+	</div><!--end inLineBlock-->
+	<hr>
+	<div class="inLineBlock">
+	  <p class="noselect" style="float: left;"><strong>Fixed/Not Fixed: </strong></p>
+	  <div class="ck-button"><label for="Hfixed" >
+			<input type="radio" name="Hfix" id="Hfixed" class="Hfixed" value="fixed"  />
+			<span class="noselect"><strong>fixed</strong></span></label>
+	  </div><!--end ck-button-->
+		<div class="ck-button"><label for="HnotFixed" >
+			<input type="radio" name="Hfix" id="HnotFixed" class="HnotFixed" value="not fixed"  />
+			<span class="noselect"><strong>not fixed</strong></span></label>
+		</div><!--end ck-button-->
+		<!--end ck-button-->
+	</div><!--end inLineBlock-->
+	<hr>
+	<input type="button" value="Add" class="button1 HaddResults" style="font-size: 20px" >
+	<input type="button" value="Clear" class="button1 button2 Hclear" style=" font-size: 20px">
+	<input type="button" value="Reset" class="button1 HresetAtmNotes" style="font-size: 20px">
+	<img noselect src="_images/csg-logo.png" alt="" style="display: block; float:left; height:200px; width200px;">
+	</div><!--end column left-->
+	<div class="column right">
+	<input type="button" value="Update Clipboard" class="button1 button2 HupdateClip" style=" font-size: 18px">
+	<textarea class="HatmNotes" placeholder="ATM Notes" style="width: 100%;" rows="23"></textarea>
+	</div><!--end column right-->
+	</div><!--end row-->
+	<hr style="margin-left: 15px; margin-right: 15px; margin-top:0px; margin-bottom:0px; padding-top:6px; background-color: #3A3A3A;">
+	</div><!--end Hyosung-->
+</div><!--end tabs-->
+</body>
+</html>
