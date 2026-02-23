@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Script Keeper",
-  "version": "1.2.2",
+  "name": "Script Keeper - test",
+  "version": "1.0.0",
   "description": "Floating popup window with ticket macros.",
   "permissions": [
     "scripting",
