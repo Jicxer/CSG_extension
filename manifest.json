@@ -1,13 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Script Keeper - test",
-  "version": "1.0.0",
+  "name": "Script Keeper",
+  "version": "1.2.4",
   "description": "Floating popup window with ticket macros.",
-  "permissions": [
-    "scripting",
-    "tabs",
-    "activeTab"
-  ],
+  "permissions": ["scripting", "tabs", "activeTab"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
@@ -16,10 +13,8 @@
     "default_icon": {
       "16": "icon.png",
       "32": "icon.png",
-      "48": "icon.png"
+      "48": "icon.png",
+      "128": "icon.png"
     }
-  },
-  "host_permissions": [
-    "<all_urls>"
-  ]
+  }
 }
