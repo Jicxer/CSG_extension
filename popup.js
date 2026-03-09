@@ -3,14 +3,10 @@ const DEFAULT_MACROS = [
     id: "nff",
     name: "No Fraud Found",
     group: "SAN",
-    typeValue: "75",
     typeText: "Suspicious Activity Notification",
-    subTypeValue: "123",
     subTypeText: "Loitering",
-    itemValue: "136",
     itemText: "No Fraud Found",
     noteText: "Video reviewed, no fraud found",
-    stateValue: "",
     stateText: "Closed"
   },
   {
@@ -204,30 +200,19 @@ async function runTicketMacro(config) {
     return null;
   };
 
-  // Set a <select> by value (preferred) or by matching option text.
-  const setSelect = (el, value, text) => {
-    if (!el) return false;
-    if (value != null && value !== "") {
-      for (const opt of el.options) {
-        if (opt.value === value) {
-          el.value = value;
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-          return true;
-        }
+  // Set a <select> by matching option text (exact, case-insensitive).
+  const setSelect = (el, text) => {
+    if (!el || !text) return false;
+    const target = text.trim().toLowerCase();
+    for (const opt of el.options) {
+      const t = (opt.textContent || opt.innerText || "").trim().toLowerCase();
+      if (t === target) {
+        el.value = opt.value;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        return true;
       }
     }
-    if (text) {
-      const target = text.trim().toLowerCase();
-      for (const opt of el.options) {
-        const t = (opt.textContent || opt.innerText || "").trim().toLowerCase();
-        if (t.includes(target)) {
-          el.value = opt.value;
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-          return true;
-        }
-      }
-    }
-    console.warn("[Script Keeper] Could not match option:", text || value);
+    console.warn("[Script Keeper] Could not match option:", text);
     return false;
   };
 
@@ -436,28 +421,27 @@ async function runTicketMacro(config) {
   const setDropdowns = async () => {
     const typeSelect = findSelect("ddlType", "type");
     if (!typeSelect) { console.warn("[Script Keeper] Type dropdown not found."); return; }
-    setSelect(typeSelect, config.typeValue, config.typeText);
+    setSelect(typeSelect, config.typeText);
 
     const subTypeSelect = findSelect("ddlSubType", "subtype", "sub-type", "sub type");
     if (!subTypeSelect) { console.warn("[Script Keeper] Sub-Type dropdown not found."); return; }
     await waitForOptions(subTypeSelect);
-    setSelect(subTypeSelect, config.subTypeValue, config.subTypeText);
+    setSelect(subTypeSelect, config.subTypeText);
 
     const itemSelect = findSelect("ddlSubTypeItem", "item");
     if (!itemSelect) { console.warn("[Script Keeper] Item dropdown not found."); return; }
     await waitForOptions(itemSelect);
     const itemText = config.autoDetectItem ? getLabel() : config.itemText;
-    const itemValue = config.autoDetectItem ? null : config.itemValue;
     if (itemText) {
-      setSelect(itemSelect, itemValue, itemText);
+      setSelect(itemSelect, itemText);
     } else {
       console.warn("[Script Keeper] Could not auto-detect item from ticket title/notes.");
     }
 
-    if (config.stateText || config.stateValue) {
+    if (config.stateText) {
       const stateSelect = findSelect("ddlStatus", "status", "state");
       if (stateSelect) {
-        setSelect(stateSelect, config.stateValue || "", config.stateText || "");
+        setSelect(stateSelect, config.stateText);
       } else {
         console.warn("[Script Keeper] State/Status dropdown not found.");
       }

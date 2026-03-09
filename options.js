@@ -2,54 +2,28 @@ const DEFAULT_MACROS = [
   {
     id: "nff",
     name: "No Fraud Found",
-    typeValue: "75",
+    group: "SAN",
     typeText: "Suspicious Activity Notification",
-    subTypeValue: "123",
     subTypeText: "Loitering",
-    itemValue: "136",
     itemText: "No Fraud Found",
     noteText: "Video reviewed, no fraud found",
-    stateValue: "",
     stateText: "Closed"
   },
   {
-    id: "nw",
-    name: "No Withdrawal Activity",
-    typeValue: "73",
+    id: "atm",
+    name: "ATM/ITM",
+    group: "ATM/ITM",
     typeText: "Hardware",
-    subTypeValue: "114",
     subTypeText: "Network Notification",
-    itemValue: "447",
-    itemText: "No Withdrawal Activity",
+    autoDetectItem: true,
     noteText: "Terminal is up and in service with no faults",
-    stateValue: "162",
     stateText: "Fixed and Closed"
   },
   {
-    id: "lc",
-    name: "Lost Comms",
-    typeValue: "73",
-    typeText: "Hardware",
-    subTypeValue: "114",
-    subTypeText: "Network Notification",
-    itemValue: "304",
-    itemText: "Lost Comms",
-    noteText: "Terminal is up and in service with no faults",
-    stateValue: "162",
-    stateText: "Fixed and Closed"
-  },
-  {
-    id: "na",
-    name: "No Transaction Activity",
-    typeValue: "73",
-    typeText: "Hardware",
-    subTypeValue: "114",
-    subTypeText: "Network Notification",
-    itemValue: "448",
-    itemText: "No Transaction Activity",
-    noteText: "Terminal is up and in service with no faults",
-    stateValue: "162",
-    stateText: "Fixed and Closed"
+    id: "autofill",
+    name: "Autofill",
+    group: "ATM",
+    autofill: true
   }
 ];
 
@@ -88,11 +62,12 @@ function renderTable() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escHtml(m.name)}</td>
+      <td>${escHtml(m.group || "")}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(m.noteText || "")}</td>
-      <td>${escHtml(m.typeText || m.typeValue || "")}</td>
-      <td>${escHtml(m.subTypeText || m.subTypeValue || "")}</td>
-      <td>${escHtml(m.itemText || m.itemValue || "")}</td>
-      <td>${escHtml(m.stateText || m.stateValue || "")}</td>
+      <td>${escHtml(m.typeText || "")}</td>
+      <td>${escHtml(m.subTypeText || "")}</td>
+      <td>${escHtml(m.itemText || (m.autoDetectItem ? "(auto)" : ""))}</td>
+      <td>${escHtml(m.stateText || "")}</td>
       <td>
         <button class="btn-sm btn-edit"   data-action="edit"   data-i="${i}">Edit</button>
         <button class="btn-sm btn-delete" data-action="delete" data-i="${i}">Delete</button>
@@ -116,17 +91,14 @@ document.getElementById("macroList").addEventListener("click", (e) => {
 function populateForm(i) {
   const m = macros[i];
   document.getElementById("editIndex").value = i;
-  document.getElementById("fId").value           = m.id           || "";
-  document.getElementById("fName").value         = m.name         || "";
-  document.getElementById("fNoteText").value     = m.noteText     || "";
-  document.getElementById("fTypeValue").value    = m.typeValue    || "";
-  document.getElementById("fTypeText").value     = m.typeText     || "";
-  document.getElementById("fSubTypeValue").value = m.subTypeValue || "";
-  document.getElementById("fSubTypeText").value  = m.subTypeText  || "";
-  document.getElementById("fItemValue").value    = m.itemValue    || "";
-  document.getElementById("fItemText").value     = m.itemText     || "";
-  document.getElementById("fStateValue").value   = m.stateValue   || "";
-  document.getElementById("fStateText").value    = m.stateText    || "";
+  document.getElementById("fId").value       = m.id       || "";
+  document.getElementById("fName").value     = m.name     || "";
+  document.getElementById("fGroup").value    = m.group    || "";
+  document.getElementById("fNoteText").value = m.noteText || "";
+  document.getElementById("fTypeText").value     = m.typeText    || "";
+  document.getElementById("fSubTypeText").value  = m.subTypeText || "";
+  document.getElementById("fItemText").value     = m.itemText    || "";
+  document.getElementById("fStateText").value    = m.stateText   || "";
   document.getElementById("fId").disabled = true; // id shouldn't change on edit
   document.getElementById("formTitle").textContent = "Edit Macro";
   document.getElementById("btnSave").textContent   = "Update Macro";
@@ -157,17 +129,14 @@ document.getElementById("macroForm").addEventListener("submit", async (e) => {
   const idx = parseInt(document.getElementById("editIndex").value, 10);
 
   const entry = {
-    id:           document.getElementById("fId").value.trim(),
-    name:         document.getElementById("fName").value.trim(),
-    noteText:     document.getElementById("fNoteText").value.trim(),
-    typeValue:    document.getElementById("fTypeValue").value.trim(),
-    typeText:     document.getElementById("fTypeText").value.trim(),
-    subTypeValue: document.getElementById("fSubTypeValue").value.trim(),
-    subTypeText:  document.getElementById("fSubTypeText").value.trim(),
-    itemValue:    document.getElementById("fItemValue").value.trim(),
-    itemText:     document.getElementById("fItemText").value.trim(),
-    stateValue:   document.getElementById("fStateValue").value.trim(),
-    stateText:    document.getElementById("fStateText").value.trim()
+    id:          document.getElementById("fId").value.trim(),
+    name:        document.getElementById("fName").value.trim(),
+    group:       document.getElementById("fGroup").value.trim(),
+    noteText:    document.getElementById("fNoteText").value.trim(),
+    typeText:    document.getElementById("fTypeText").value.trim(),
+    subTypeText: document.getElementById("fSubTypeText").value.trim(),
+    itemText:    document.getElementById("fItemText").value.trim(),
+    stateText:   document.getElementById("fStateText").value.trim()
   };
 
   if (idx === -1) {
