@@ -49,7 +49,7 @@ chrome.action.onClicked.addListener(() => {
     url: popupUrl,
     type: "popup",
     width: 320,
-    height: 310,
+    height: 360,
     focused: true
   });
 });

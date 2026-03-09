@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Script Keeper – Settings</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 { margin-top: 0; }
+    h3 { margin-bottom: 8px; }
+
+    /* Macro list table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th {
+      background: #3ecb60;
+      color: white;
+      padding: 8px 10px;
+      text-align: left;
+    }
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #eee;
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9f9f9; }
+    .btn-sm {
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      margin-right: 4px;
+    }
+    .btn-edit  { background: #0078d4; }
+    .btn-edit:hover  { background: #005ea2; }
+    .btn-delete { background: #d9534f; }
+    .btn-delete:hover { background: #b52b27; }
+
+    /* Add/Edit form */
+    hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 20px;
+    }
+    .form-grid label,
+    .form-full label {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      gap: 4px;
+    }
+    .form-full { margin-bottom: 6px; }
+    input[type="text"], textarea {
+      padding: 7px 9px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #3ecb60;
+      box-shadow: 0 0 0 2px rgba(62,203,96,0.2);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .form-actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn-primary {
+      padding: 9px 20px;
+      background: #3ecb60;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-primary:hover { background: #2fb350; }
+    .btn-secondary {
+      padding: 9px 20px;
+      background: #ccc;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-secondary:hover { background: #bbb; }
+    .btn-reset {
+      padding: 9px 20px;
+      background: #f0ad4e;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-reset:hover { background: #d9922a; }
+
+    #statusMsg {
+      display: none;
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    #statusMsg.success { display: block; background: #d4edda; color: #155724; }
+    #statusMsg.error   { display: block; background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Script Keeper – Macro Settings</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Note Text</th>
+          <th>Type</th>
+          <th>Sub-Type</th>
+          <th>Item</th>
+          <th>State</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="macroList"></tbody>
+    </table>
+
+    <hr>
+
+    <h3 id="formTitle">Add Macro</h3>
+    <form id="macroForm" autocomplete="off">
+      <input type="hidden" id="editIndex" value="-1">
+
+      <div class="form-grid">
+        <label>ID (slug, lowercase, no spaces)
+          <input type="text" id="fId" required pattern="[a-z0-9_]+" placeholder="e.g. nff">
+        </label>
+        <label>Name
+          <input type="text" id="fName" required placeholder="e.g. No Fraud Found">
+        </label>
+      </div>
+
+      <div class="form-full" style="margin-top:10px;">
+        <label>Note Text
+          <textarea id="fNoteText" placeholder="Text inserted into the note field"></textarea>
+        </label>
+      </div>
+
+      <div class="form-grid" style="margin-top:10px;">
+        <label>Type Value <input type="text" id="fTypeValue" placeholder="e.g. 75"></label>
+        <label>Type Text  <input type="text" id="fTypeText"  placeholder="e.g. Suspicious Activity Notification"></label>
+        <label>Sub-Type Value <input type="text" id="fSubTypeValue" placeholder="e.g. 123"></label>
+        <label>Sub-Type Text  <input type="text" id="fSubTypeText"  placeholder="e.g. Loitering"></label>
+        <label>Item Value <input type="text" id="fItemValue" placeholder="e.g. 136"></label>
+        <label>Item Text  <input type="text" id="fItemText"  placeholder="e.g. No Fraud Found"></label>
+        <label>State Value <input type="text" id="fStateValue" placeholder="e.g. 162"></label>
+        <label>State Text  <input type="text" id="fStateText"  placeholder="e.g. Fixed and Closed"></label>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" id="btnSave" class="btn-primary">Save Macro</button>
+        <button type="button" id="btnCancel" class="btn-secondary">Cancel</button>
+      </div>
+    </form>
+
+    <hr>
+    <button id="btnReset" class="btn-reset">Reset All to Defaults</button>
+    <div id="statusMsg"></div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
