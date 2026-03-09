@@ -2,6 +2,7 @@ const DEFAULT_MACROS = [
   {
     id: "nff",
     name: "No Fraud Found",
+    group: "SAN",
     typeValue: "75",
     typeText: "Suspicious Activity Notification",
     subTypeValue: "123",
@@ -15,6 +16,7 @@ const DEFAULT_MACROS = [
   {
     id: "atm",
     name: "ATM/ITM",
+    group: "ATM/ITM",
     typeText: "Hardware",
     subTypeText: "Network Notification",
     autoDetectItem: true,
@@ -24,6 +26,7 @@ const DEFAULT_MACROS = [
   {
     id: "autofill",
     name: "Autofill",
+    group: "ATM",
     autofill: true
   }
 ];
@@ -33,12 +36,38 @@ document.addEventListener("DOMContentLoaded", async () => {
   const macros = (stored.macros && stored.macros.length) ? stored.macros : DEFAULT_MACROS;
 
   const container = document.getElementById("macro-buttons");
-  for (const macro of macros) {
+
+  const makeButton = (macro) => {
     const btn = document.createElement("button");
     btn.id = "btn_" + macro.id;
     btn.textContent = macro.name;
     btn.addEventListener("click", () => runMacroInTargetTab(macro));
-    container.appendChild(btn);
+    return btn;
+  };
+
+  const grouped = {};
+  const ungrouped = [];
+  for (const macro of macros) {
+    if (macro.group) {
+      (grouped[macro.group] ||= []).push(macro);
+    } else {
+      ungrouped.push(macro);
+    }
+  }
+
+  for (const macro of ungrouped) {
+    container.appendChild(makeButton(macro));
+  }
+
+  for (const [groupName, items] of Object.entries(grouped)) {
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = groupName;
+    details.appendChild(summary);
+    for (const macro of items) {
+      details.appendChild(makeButton(macro));
+    }
+    container.appendChild(details);
   }
 
   document.getElementById("btnSettings").addEventListener("click", (e) => {

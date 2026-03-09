@@ -54,6 +54,28 @@
     button:hover {
       background: #0078d4;
     }
+    details {
+      margin: 6px 0;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 6px 4px;
+      color: #444;
+      list-style: none;
+      user-select: none;
+    }
+    summary::before {
+      content: "▶ ";
+      font-size: 11px;
+    }
+    details[open] summary::before {
+      content: "▼ ";
+    }
+    details button {
+      margin-left: 10px;
+      width: calc(100% - 10px);
+    }
     #status {
       display: none;
       margin-top: 10px;
