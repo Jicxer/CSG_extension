@@ -56,25 +56,43 @@
     }
     details {
       margin: 6px 0;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
     }
     summary {
       cursor: pointer;
       font-weight: bold;
-      padding: 6px 4px;
+      font-size: 13px;
+      padding: 8px 12px;
       color: #444;
+      background: #f0f0f0;
       list-style: none;
       user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    summary:hover {
+      background: #e4e4e4;
     }
     summary::before {
-      content: "▶ ";
-      font-size: 11px;
+      content: "▶";
+      font-size: 10px;
+      color: #888;
+      transition: transform 0.15s ease;
+      display: inline-block;
+    }
+    details[open] summary {
+      border-bottom: 1px solid #e0e0e0;
     }
     details[open] summary::before {
-      content: "▼ ";
+      transform: rotate(90deg);
     }
+    details > button,
     details button {
-      margin-left: 10px;
-      width: calc(100% - 10px);
+      margin: 6px 10px;
+      width: calc(100% - 20px);
     }
     #status {
       display: none;
