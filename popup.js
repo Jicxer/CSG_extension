@@ -13,43 +13,18 @@ const DEFAULT_MACROS = [
     stateText: "Closed"
   },
   {
-    id: "nw",
-    name: "No Withdrawal Activity",
-    typeValue: "73",
+    id: "atm",
+    name: "ATM/ITM",
     typeText: "Hardware",
-    subTypeValue: "114",
     subTypeText: "Network Notification",
-    itemValue: "447",
-    itemText: "No Withdrawal Activity",
+    autoDetectItem: true,
     noteText: "Terminal is up and in service with no faults",
-    stateValue: "162",
     stateText: "Fixed and Closed"
   },
   {
-    id: "lc",
-    name: "Lost Comms",
-    typeValue: "73",
-    typeText: "Hardware",
-    subTypeValue: "114",
-    subTypeText: "Network Notification",
-    itemValue: "304",
-    itemText: "Lost Comms",
-    noteText: "Terminal is up and in service with no faults",
-    stateValue: "162",
-    stateText: "Fixed and Closed"
-  },
-  {
-    id: "na",
-    name: "No Transaction Activity",
-    typeValue: "73",
-    typeText: "Hardware",
-    subTypeValue: "114",
-    subTypeText: "Network Notification",
-    itemValue: "448",
-    itemText: "No Transaction Activity",
-    noteText: "Terminal is up and in service with no faults",
-    stateValue: "162",
-    stateText: "Fixed and Closed"
+    id: "autofill",
+    name: "Autofill",
+    autofill: true
   }
 ];
 
@@ -125,7 +100,7 @@ async function runMacroInTargetTab(config) {
 
     const results = await chrome.scripting.executeScript({
       target: { tabId },
-      func: runTicketMacro,
+      func: config.autofill ? runAutofill : runTicketMacro,
       args: [config]
     });
 
@@ -251,10 +226,143 @@ async function runTicketMacro(config) {
     });
   };
 
-  try {
-    console.log("[Script Keeper] Running macro:", config?.name);
+  const itemCategories = {
+    "No Withdrawal Activity": [
+      "no withdrawals dispatch"
+    ],
+    "No Transaction Activity": [
+      "Notification for ACTMON",
+      "Business Rule : No Transactions Activity, Fault Descr : No transaction activity",
+      "ATM Processing Transactions",
+      "ATM Inactive greater than",
+      "ZERO TRANS TERMINAL/8 HOURS",
+      "ZERO TRANS TERMINAL/12 HOURS",
+      "Status code Description :ZERO TRANS TERMINAL/18 HOURS"
+    ],
+    "Lost Comms": [
+      "comm dispatch",
+      "offline",
+      "Business Rule : Lost Communication, Fault Descr : Session closed by partner",
+      "In Service to Off-Line",
+      "CommR Dispatch",
+      "Online",
+      "Notification for COMMUNICATION FAILURE",
+      "(5003, critical)",
+      "(113, info)",
+      "(5004, suspect)",
+      "status='C7'",
+      "Terminal Off Line As Of",
+      "Terminal Closed As Of",
+      "Category: Supervisor Dispatch",
+      "Business Rule : Out of Service, Fault Descr : No Load",
+      "(30, suspect)",
+      "Business Rule : Risk Condition, Fault Descr : Excessive txn reversals",
+      "Status code Description :DEVICE IN MAINTENANCE",
+      "Terminal in Supervisor As Of",
+      "Last Transaction Reversed As Of",
+      "Status='C1' (Communication line not available)",
+      "RVClient - Failed to Send Heartbeats -",
+      "The ATM changed mode from Closed to Off-Line.",
+      "Status code Description :SESSION CLOSED",
+      "Status code Description :KEY SYNC ERROR",
+      "Status Code Description: ATM OUT OF SERVICE",
+      "Status code Description :DEVICE IS CLOSED"
+    ],
+    "Depositor": [
+      "Depository Dispatch",
+      "Business Rule : Device Fault, Fault Descr : Depository down",
+      "Notification for DEPOSITORY FAILURE",
+      "(2009, critical)",
+      "Notification for CK/MICR READER FAILURE for Device",
+      "(2211, suspect)",
+      "Business Rule : Device Fault, Fault Descr : Envelope printer down",
+      "Business Rule : Device Fault, Fault Descr : Document depository down",
+      "Business Rule : Printer Paper Other Supply Problems, Fault Descr : Depository low/full",
+      "Status code Description :DEPOSITORY LOW/FULL",
+      "Status Code Description: USB Scalable Deposit Module 2",
+      "Status code Description :DEPOSITORY DOWN",
+      "Notification for CASH ACCEPTOR FAILURE",
+      "Depositor"
+    ],
+    "Dispenser": [
+      "Dispenser Dispatch",
+      "Business Rule : Device Fault, Fault Descr : Cash handler down",
+      "Notification for MULTIPLE DISPENSER FAILURE",
+      "Business Rule : Device Fault, Fault Descr : Cash handler bill jammed",
+      "status='0010'",
+      "status='0008'",
+      "(46, critical)",
+      "(2001, critical)",
+      "(2005, critical)",
+      "Notification for DIVERT FAILURE",
+      "Category: Cash Out Dispatch",
+      "Business Rule : Device Fault, Fault Descr : Canister",
+      "Business Rule : Device Fault, Fault Descr : Cash hand bills not seen exit",
+      "Notification for DISPENSER FAILURE",
+      "Status code Description :CASH HANDLER DOWN",
+      "Status code Description :CANISTER",
+      "Notification for CASH THRESHOLD LIMIT REACHED",
+      "CASH HANDLER DOWN",
+      "Business Rule : Device Fault, Fault Descr : Cash hand bills not seen at exit"
+    ],
+    "Printer": [
+      "Receipt Printer Dispatch",
+      "(2047, critical)",
+      "Business Rule : Device Fault, Fault Descr : Cons prt head jam/go busy fail",
+      "Business Rule : Device Fault, Fault Descr : Cons prt paper not load or jam",
+      "Business Rule : Printer Paper Other Supply Problems, Fault Descr : Consumer printer fault",
+      "Business Rule : Device Fault, Fault Descr : Consumer prt paper jam",
+      "Status code Description :CONSUMER PRINTER DOWN",
+      "CONSUMER PRINTER DOWN",
+      "Notification for RECEIPT PRINTER FAILURE"
+    ],
+    "Card Reader": [
+      "Card reader Dispatch",
+      "Business Rule : Out of Service, Fault Descr : Card reader fault",
+      "Notification for EMV CARD READER FAILURE",
+      "(2280, suspect)",
+      "(2020, critical)",
+      "(2281, critical)",
+      "Business Rule : Device Fault, Fault Descr : Card capture bin full",
+      "Status code Description :Mult. Card Reader/Writer Warns",
+      "Status code Description :CARD READER/WRITER DOWN"
+    ],
+    "Cassette": [
+      "status='0016'",
+      "Cassettes of type",
+      "(50, critical)"
+    ],
+    "EPP": [
+      "Business Rule : Out of Service, Fault Descr : Encryptor down",
+      "Notification for ENCRYPTION FAILURE for Device",
+      "Status code Description :ENCRYPTOR DOWN",
+      "Category: Encryptor Dispatch"
+    ],
+    "Anti Skimming": [
+      "Business Rule : Out of Service, Fault Descr : Card skimming fraud detected Hard Fault",
+      "Category: Security Dispatch",
+      "(2031, critical)",
+      "Business Rule : Risk Condition, Fault Descr : Card skimming device detected",
+      "Status code Description :POSSIBLE SKIMMING DEVICE DETECTED"
+    ]
+  };
 
-    // 1) Open Add Note dialog
+  const getLabel = () => {
+    const titleEl = document.getElementById("txtTitle");
+    const titleValue = titleEl ? titleEl.value.trim().toLowerCase() : "";
+    const ticketNotes = Array.from(document.querySelectorAll(".notice_info"));
+    const lastNote = ticketNotes.at(-1)?.textContent.trim().toLowerCase() || "";
+    for (const [label, keywords] of Object.entries(itemCategories)) {
+      for (const keyword of keywords) {
+        if (titleValue.includes(keyword.toLowerCase()) || lastNote.includes(keyword.toLowerCase())) {
+          return label;
+        }
+      }
+    }
+    return null;
+  };
+
+  const openNoteDialog = async () => {
     const addNoteButton =
       document.getElementById("aAddNotes") ||
       Array.from(document.querySelectorAll("a,button")).find((el) => {
@@ -263,31 +371,30 @@ async function runTicketMacro(config) {
       }) ||
       null;
 
-    if (!addNoteButton) return { success: false, error: "Add Note button not found" };
+    if (!addNoteButton) throw new Error("Add Note button not found");
     addNoteButton.click();
 
-    // 2) Wait for note text area
     const noteArea = await waitForSel([
       "#txtNoteDescription",
       "textarea#txtNoteDescription",
       "textarea[id*='NoteDescription']",
       "textarea[name*='Note']"
     ]);
-    if (!noteArea) return { success: false, error: "Note text area not found" };
+    if (!noteArea) throw new Error("Note text area not found");
 
     const modalRoot = noteArea.closest(".modal") || noteArea.closest(".ui-dialog") || document;
+    return { noteArea, modalRoot };
+  };
 
-    // 3) Uncheck recipient checkboxes
+  const fillAndSubmitNote = async (noteArea, modalRoot) => {
     uncheckRecipientCheckboxes(modalRoot);
 
-    // 4) Fill note text
     if (config.noteText) {
       noteArea.value = config.noteText;
       noteArea.dispatchEvent(new Event("input", { bubbles: true }));
       noteArea.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    // 5) Submit note and wait for modal to close instead of a fixed delay
     const submitBtn = findButtonByText(modalRoot, "submit");
     if (submitBtn) {
       submitBtn.click();
@@ -295,32 +402,29 @@ async function runTicketMacro(config) {
     } else {
       console.warn("[Script Keeper] Submit button not found in note dialog.");
     }
+  };
 
-    // 6) Set Type, then wait for Sub-Type cascade, then wait for Item cascade
+  const setDropdowns = async () => {
     const typeSelect = findSelect("ddlType", "type");
-    if (typeSelect) {
-      setSelect(typeSelect, config.typeValue, config.typeText);
+    if (!typeSelect) { console.warn("[Script Keeper] Type dropdown not found."); return; }
+    setSelect(typeSelect, config.typeValue, config.typeText);
 
-      const subTypeSelect = findSelect("ddlSubType", "subtype", "sub-type", "sub type");
-      if (subTypeSelect) {
-        await waitForOptions(subTypeSelect);
-        setSelect(subTypeSelect, config.subTypeValue, config.subTypeText);
+    const subTypeSelect = findSelect("ddlSubType", "subtype", "sub-type", "sub type");
+    if (!subTypeSelect) { console.warn("[Script Keeper] Sub-Type dropdown not found."); return; }
+    await waitForOptions(subTypeSelect);
+    setSelect(subTypeSelect, config.subTypeValue, config.subTypeText);
 
-        const itemSelect = findSelect("ddlSubTypeItem", "item");
-        if (itemSelect) {
-          await waitForOptions(itemSelect);
-          setSelect(itemSelect, config.itemValue, config.itemText);
-        } else {
-          console.warn("[Script Keeper] Item dropdown not found.");
-        }
-      } else {
-        console.warn("[Script Keeper] Sub-Type dropdown not found.");
-      }
+    const itemSelect = findSelect("ddlSubTypeItem", "item");
+    if (!itemSelect) { console.warn("[Script Keeper] Item dropdown not found."); return; }
+    await waitForOptions(itemSelect);
+    const itemText = config.autoDetectItem ? getLabel() : config.itemText;
+    const itemValue = config.autoDetectItem ? null : config.itemValue;
+    if (itemText) {
+      setSelect(itemSelect, itemValue, itemText);
     } else {
-      console.warn("[Script Keeper] Type dropdown not found.");
+      console.warn("[Script Keeper] Could not auto-detect item from ticket title/notes.");
     }
 
-    // 7) Set State/Status dropdown
     if (config.stateText || config.stateValue) {
       const stateSelect = findSelect("ddlStatus", "status", "state");
       if (stateSelect) {
@@ -329,8 +433,9 @@ async function runTicketMacro(config) {
         console.warn("[Script Keeper] State/Status dropdown not found.");
       }
     }
+  };
 
-    // 8) Save
+  const save = () => {
     const saveBtn =
       findButtonByText(document, "save") ||
       Array.from(document.querySelectorAll("a.btn.btn-primary, button.btn.btn-primary")).find(
@@ -343,10 +448,376 @@ async function runTicketMacro(config) {
     } else {
       console.warn("[Script Keeper] Save button not found.");
     }
+  };
 
+  try {
+    console.log("[Script Keeper] Running macro:", config?.name);
+    const { noteArea, modalRoot } = await openNoteDialog();
+    await fillAndSubmitNote(noteArea, modalRoot);
+    await setDropdowns();
+    save();
     return { success: true };
   } catch (err) {
     console.error("[Script Keeper] Macro error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+// Runs in the context of the ticket page — must be entirely self-contained.
+async function runAutofill() {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  const waitForSel = async (selector, timeout = 8000, interval = 150) => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      const el = document.querySelector(selector);
+      if (el) return el;
+      await sleep(interval);
+    }
+    return null;
+  };
+
+  const waitForTableReady = async (selector, minCells = 13, timeout = 8000, interval = 150) => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      const table = document.querySelector(selector);
+      if (table) {
+        const validRow = Array.from(table.querySelectorAll("tbody tr")).find(
+          (row) => row.querySelectorAll("td").length >= minCells
+        );
+        if (validRow) return table;
+      }
+      await sleep(interval);
+    }
+    console.warn("[Script Keeper] Timeout waiting for table:", selector);
+    return null;
+  };
+
+  const findOption = (dropdown, label) => {
+    return Array.from(dropdown.options).find(
+      (opt) => opt.textContent.trim().toLowerCase() === label.toLowerCase()
+    ) || null;
+  };
+
+  const mostFrequentValue = (arr, prop) => {
+    if (!arr || !prop) return { value: null, count: null };
+    const freq = arr.reduce((acc, item) => {
+      const v = item[prop];
+      acc[v] = (acc[v] || 0) + 1;
+      return acc;
+    }, {});
+    let bestValue = null, bestCount = 0;
+    for (const [value, count] of Object.entries(freq)) {
+      if (count > bestCount) { bestValue = value; bestCount = count; }
+    }
+    return { value: bestValue, count: bestCount };
+  };
+
+  const tidRegexes = [
+    /Terminal Id\s*:?\s*(\w{6,8})/i,
+    /Terminal ID\W*(\w{6,8})/i,
+    /Device\s*:?\s*(\w{6,8})/i,
+    /Term ID\s*:?\s*(\w{6,8})/i,
+    /ATM ID:\s*:?\s*(\w{6,8})/i,
+    /\S+CBC\S+\s(\w{6,8})/i,
+    /(?=.*[()])([^()]+)(?=\s*)/i,
+    /(\b\w{6,8}\b)(?=\s+(?:returned|is))/i,
+    /(\b\w{6,8}\b)(?=\s+(?:The ATM))/i,
+    /DCU\sATM\S*\s(\w{6,8})/i,
+    /ATM ALERT\S\s(\w{6,8})/i,
+    /Failed to Send Heartbeats\s\S\s(\w{6,8})/i,
+    /(\w{6,8})(?=\sTerminal)/
+  ];
+
+  const extractTID = (title) => {
+    for (const re of tidRegexes) {
+      const m = title.match(re);
+      if (m && m[1]) return m[1];
+    }
+    return null;
+  };
+
+  const fetchTicketHistory = async (tid) => {
+    if (!tid) return null;
+    const res = await fetch("https://cc.cooksolutionsgroup.com/Support/Dashboard/GetDashboardTickets", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pageNo: 1, pageSize: 50, OrderByDesc: true,
+        TeamRecId: "4", BoardRecId: "14",
+        IncludeChildren: false, ExcludeOpenTime: false,
+        CallFrom: 1, IncludeInternalNote: true, CreatedDateFilter: "0",
+        ColumnLevelSearch: { TicketRecId: null, Title: tid }
+      })
+    });
+    if (!res.ok) { console.error("[Script Keeper] Ticket fetch failed:", res.status); return null; }
+    const data = await res.json();
+    return Object.values(data.rows).map((t) => ({
+      TicketRecId: t.TicketRecId,
+      CustomerName: t.CustomerName,
+      Location: t.Location,
+      CreatedDateUTC: t.CreatedDateUTC,
+      UpdatedDateUTC: t.UpdatedDateUTC
+    }));
+  };
+
+  const itemCategories = {
+    "No Withdrawal Activity": ["no withdrawals dispatch"],
+    "No Transaction Activity": [
+      "Notification for ACTMON",
+      "Business Rule : No Transactions Activity, Fault Descr : No transaction activity",
+      "ATM Processing Transactions", "ATM Inactive greater than",
+      "ZERO TRANS TERMINAL/8 HOURS", "ZERO TRANS TERMINAL/12 HOURS",
+      "Status code Description :ZERO TRANS TERMINAL/18 HOURS"
+    ],
+    "Lost Comms": [
+      "comm dispatch", "offline",
+      "Business Rule : Lost Communication, Fault Descr : Session closed by partner",
+      "In Service to Off-Line", "CommR Dispatch", "Online",
+      "Notification for COMMUNICATION FAILURE",
+      "(5003, critical)", "(113, info)", "(5004, suspect)", "status='C7'",
+      "Terminal Off Line As Of", "Terminal Closed As Of",
+      "Category: Supervisor Dispatch",
+      "Business Rule : Out of Service, Fault Descr : No Load", "(30, suspect)",
+      "Business Rule : Risk Condition, Fault Descr : Excessive txn reversals",
+      "Status code Description :DEVICE IN MAINTENANCE",
+      "Terminal in Supervisor As Of", "Last Transaction Reversed As Of",
+      "Status='C1' (Communication line not available)",
+      "RVClient - Failed to Send Heartbeats -",
+      "The ATM changed mode from Closed to Off-Line.",
+      "Status code Description :SESSION CLOSED",
+      "Status code Description :KEY SYNC ERROR",
+      "Status Code Description: ATM OUT OF SERVICE",
+      "Status code Description :DEVICE IS CLOSED"
+    ],
+    "Depositor": [
+      "Depository Dispatch",
+      "Business Rule : Device Fault, Fault Descr : Depository down",
+      "Notification for DEPOSITORY FAILURE", "(2009, critical)",
+      "Notification for CK/MICR READER FAILURE for Device", "(2211, suspect)",
+      "Business Rule : Device Fault, Fault Descr : Envelope printer down",
+      "Business Rule : Device Fault, Fault Descr : Document depository down",
+      "Business Rule : Printer Paper Other Supply Problems, Fault Descr : Depository low/full",
+      "Status code Description :DEPOSITORY LOW/FULL",
+      "Status Code Description: USB Scalable Deposit Module 2",
+      "Status code Description :DEPOSITORY DOWN",
+      "Notification for CASH ACCEPTOR FAILURE", "Depositor"
+    ],
+    "Dispenser": [
+      "Dispenser Dispatch",
+      "Business Rule : Device Fault, Fault Descr : Cash handler down",
+      "Notification for MULTIPLE DISPENSER FAILURE",
+      "Business Rule : Device Fault, Fault Descr : Cash handler bill jammed",
+      "status='0010'", "status='0008'",
+      "(46, critical)", "(2001, critical)", "(2005, critical)",
+      "Notification for DIVERT FAILURE", "Category: Cash Out Dispatch",
+      "Business Rule : Device Fault, Fault Descr : Canister",
+      "Business Rule : Device Fault, Fault Descr : Cash hand bills not seen exit",
+      "Notification for DISPENSER FAILURE",
+      "Status code Description :CASH HANDLER DOWN",
+      "Status code Description :CANISTER",
+      "Notification for CASH THRESHOLD LIMIT REACHED", "CASH HANDLER DOWN",
+      "Business Rule : Device Fault, Fault Descr : Cash hand bills not seen at exit"
+    ],
+    "Printer": [
+      "Receipt Printer Dispatch", "(2047, critical)",
+      "Business Rule : Device Fault, Fault Descr : Cons prt head jam/go busy fail",
+      "Business Rule : Device Fault, Fault Descr : Cons prt paper not load or jam",
+      "Business Rule : Printer Paper Other Supply Problems, Fault Descr : Consumer printer fault",
+      "Business Rule : Device Fault, Fault Descr : Consumer prt paper jam",
+      "Status code Description :CONSUMER PRINTER DOWN", "CONSUMER PRINTER DOWN",
+      "Notification for RECEIPT PRINTER FAILURE"
+    ],
+    "Card Reader": [
+      "Card reader Dispatch",
+      "Business Rule : Out of Service, Fault Descr : Card reader fault",
+      "Notification for EMV CARD READER FAILURE",
+      "(2280, suspect)", "(2020, critical)", "(2281, critical)",
+      "Business Rule : Device Fault, Fault Descr : Card capture bin full",
+      "Status code Description :Mult. Card Reader/Writer Warns",
+      "Status code Description :CARD READER/WRITER DOWN"
+    ],
+    "Cassette": ["status='0016'", "Cassettes of type", "(50, critical)"],
+    "EPP": [
+      "Business Rule : Out of Service, Fault Descr : Encryptor down",
+      "Notification for ENCRYPTION FAILURE for Device",
+      "Status code Description :ENCRYPTOR DOWN", "Category: Encryptor Dispatch"
+    ],
+    "Anti Skimming": [
+      "Business Rule : Out of Service, Fault Descr : Card skimming fraud detected Hard Fault",
+      "Category: Security Dispatch", "(2031, critical)",
+      "Business Rule : Risk Condition, Fault Descr : Card skimming device detected",
+      "Status code Description :POSSIBLE SKIMMING DEVICE DETECTED"
+    ]
+  };
+
+  const getLabel = () => {
+    const titleEl = document.getElementById("txtTitle");
+    const titleValue = titleEl ? titleEl.value.trim().toLowerCase() : "";
+    const lastNote = Array.from(document.querySelectorAll(".notice_info")).at(-1)?.textContent.trim().toLowerCase() || "";
+    for (const [label, keywords] of Object.entries(itemCategories)) {
+      for (const keyword of keywords) {
+        if (titleValue.includes(keyword.toLowerCase()) || lastNote.includes(keyword.toLowerCase())) {
+          return label;
+        }
+      }
+    }
+    return null;
+  };
+
+  const setStatusToInProgress = async () => {
+    const statusDropDown = await waitForSel("#ddlStatus");
+    if (!statusDropDown) { console.warn("[Script Keeper] Status dropdown not found."); return; }
+    const opt = findOption(statusDropDown, "in progress");
+    if (opt) statusDropDown.value = opt.value;
+  };
+
+  const autoChangeType = async () => {
+    const boardDropDown = await waitForSel("#ddlBoard");
+    if (!boardDropDown) return;
+    const atmOpt = findOption(boardDropDown, "atm/itm");
+    if (!atmOpt || boardDropDown.value !== atmOpt.value) {
+      console.log("[Script Keeper] Not on ATM/ITM board, skipping autoChangeType.");
+      return;
+    }
+    const typeDropDown = await waitForSel("#ddlType");
+    if (typeDropDown) {
+      const hwOpt = findOption(typeDropDown, "hardware");
+      if (hwOpt) {
+        typeDropDown.value = hwOpt.value;
+        typeDropDown.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+    const subTypeDropDown = await waitForSel("#ddlSubType");
+    if (subTypeDropDown) {
+      const netOpt = findOption(subTypeDropDown, "network notification");
+      if (netOpt) {
+        subTypeDropDown.value = netOpt.value;
+        subTypeDropDown.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  };
+
+  const selectItem = async () => {
+    const itemDropDown = await waitForSel("#ddlSubTypeItem");
+    if (!itemDropDown) { console.warn("[Script Keeper] Item dropdown not found."); return; }
+    const label = getLabel();
+    if (!label) { console.warn("[Script Keeper] Could not detect item label from title/notes."); return; }
+    const opt = findOption(itemDropDown, label);
+    if (opt) itemDropDown.value = opt.value;
+  };
+
+  const selectCompany = async (companyDropDown, ticketHistory) => {
+    if (companyDropDown.options.length <= 2) return false;
+    const bomOpt = findOption(companyDropDown, "Bank Michigan");
+    if (companyDropDown.selectedIndex !== 0 && companyDropDown.value !== bomOpt?.value) {
+      console.log("[Script Keeper] Company already selected, skipping.");
+      return false;
+    }
+    const best = mostFrequentValue(ticketHistory, "CustomerName");
+    if (!best.value || best.value === "null") {
+      const csgOpt = findOption(companyDropDown, "Cook Solutions Group");
+      if (csgOpt) {
+        companyDropDown.value = csgOpt.value;
+        companyDropDown.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      return false;
+    }
+    const matched = findOption(companyDropDown, best.value);
+    if (!matched) { console.warn("[Script Keeper] Company option not found:", best.value); return false; }
+    companyDropDown.value = matched.value;
+    companyDropDown.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  };
+
+  const selectLocation = async (ticketHistory) => {
+    const locationDropDown = await waitForSel("#ddlLocation");
+    if (!locationDropDown) { console.warn("[Script Keeper] Location dropdown not found."); return null; }
+
+    const start = Date.now();
+    while (locationDropDown.options.length <= 1 && Date.now() - start < 10000) {
+      await sleep(500);
+    }
+    if (locationDropDown.options.length <= 1) {
+      console.warn("[Script Keeper] Location dropdown did not populate.");
+      return null;
+    }
+
+    const best = mostFrequentValue(ticketHistory, "Location");
+    const matched = Array.from(locationDropDown.options).find(
+      (opt) => best.value && best.value.includes(opt.value)
+    );
+    if (!matched) { console.warn("[Script Keeper] No matching location found."); return null; }
+
+    locationDropDown.value = matched.value;
+    locationDropDown.dispatchEvent(new Event("change", { bubbles: true }));
+    return { res: true, TID: matched.dataset?.subtitle3 || "" };
+  };
+
+  const addEquipment = async (locationTID) => {
+    const addEquipBtn =
+      document.getElementById("btnAddNewEquipment") ||
+      Array.from(document.querySelectorAll("a, button")).find((el) =>
+        (el.textContent || "").trim().toLowerCase().includes("add new equipment")
+      ) || null;
+
+    if (!addEquipBtn) { console.warn("[Script Keeper] Add Equipment button not found."); return; }
+    addEquipBtn.click();
+
+    const table = await waitForTableReady("#tblEquipmentListing");
+    if (!table) { console.warn("[Script Keeper] Equipment table not found."); return; }
+
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+    const matchedRow = rows.find((row) => {
+      const terminal = row.querySelectorAll("td")[6]?.textContent.trim().toLowerCase();
+      return terminal && locationTID.TID.toLowerCase().includes(terminal);
+    });
+
+    if (matchedRow) {
+      matchedRow.querySelector("td:first-child input")?.click();
+    } else {
+      console.warn("[Script Keeper] No matching equipment row found.");
+    }
+
+    const associateBtn =
+      document.getElementById("btnAssociatedEquipment") ||
+      Array.from(document.querySelectorAll("a, button")).find((el) =>
+        (el.textContent || "").trim().toLowerCase().includes("associated equipment")
+      ) || null;
+
+    if (associateBtn) associateBtn.click();
+    else console.warn("[Script Keeper] Associate Equipment button not found.");
+  };
+
+  try {
+    console.log("[Script Keeper] Running autofill");
+    const titleValue = document.getElementById("txtTitle")?.value.trim().toLowerCase() || "";
+    const TID = extractTID(titleValue);
+
+    const companyDropDown = await waitForSel("#ddlSupportCompany");
+    if (!companyDropDown) throw new Error("Company dropdown not found");
+
+    let ticketHistory = null;
+    const bomOpt = findOption(companyDropDown, "Bank Michigan");
+    if (companyDropDown.selectedIndex === 0 || companyDropDown.value === bomOpt?.value) {
+      if (TID) ticketHistory = await fetchTicketHistory(TID);
+    }
+
+    const changedCompany = await selectCompany(companyDropDown, ticketHistory);
+    await setStatusToInProgress();
+    await autoChangeType();
+    await selectItem();
+
+    if (changedCompany) {
+      await sleep(500);
+      const locationTID = await selectLocation(ticketHistory);
+      if (locationTID) await addEquipment(locationTID);
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("[Script Keeper] Autofill error:", err);
     return { success: false, error: err.message };
   }
 }
