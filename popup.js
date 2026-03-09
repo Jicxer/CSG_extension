@@ -12,7 +12,7 @@ const DEFAULT_MACROS = [
     {
     id: "autofill",
     name: "Autofill",
-    group: "ATM",
+    group: "ATM/ITM",
     autofill: true
   },
   {
