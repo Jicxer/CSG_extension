@@ -9,21 +9,31 @@ const DEFAULT_MACROS = [
     noteText: "Video reviewed, no fraud found",
     stateText: "Closed"
   },
+    {
+    id: "autofill",
+    name: "Autofill",
+    group: "ATM",
+    autofill: true
+  },
   {
-    id: "atm",
-    name: "ATM/ITM",
+    id: "nofaults",
+    name: "No faults",
     group: "ATM/ITM",
     typeText: "Hardware",
     subTypeText: "Network Notification",
     autoDetectItem: true,
     noteText: "Terminal is up and in service with no faults",
-    stateText: "Fixed and Closed"
+    stateText: "Fixed"
   },
-  {
-    id: "autofill",
-    name: "Autofill",
-    group: "ATM",
-    autofill: true
+    {
+    id: "upandin",
+    name: "Up and In Service",
+    group: "ATM/ITM",
+    typeText: "Hardware",
+    subTypeText: "Network Notification",
+    autoDetectItem: true,
+    noteText: "Terminal is up and in service",
+    stateText: "Fixed"
   }
 ];
 
