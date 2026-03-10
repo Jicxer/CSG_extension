@@ -178,8 +178,9 @@ async function runMacroInTargetTab(config) {
 /**
  * Injected into the ticket page to execute a standard macro.
  * Must be entirely self-contained (no closure over popup scope).
- * Steps: opens the Add Note dialog, fills and submits the note, sets
- * the Type/SubType/Item/State dropdowns, then clicks Save.
+ * Steps: closes any open overlay, opens the Add Note modal, unchecks recipient
+ * checkboxes by ID, waits for the editor (textarea or ProseMirror) to mount,
+ * writes the note, submits, sets Type/SubType/Item/State dropdowns, then saves.
  * @param {Object} config - Macro config with noteText, typeText, subTypeText,
  *   itemText, stateText, and autoDetectItem flags.
  * @returns {Promise<{success: boolean, error?: string}>}
@@ -187,57 +188,114 @@ async function runMacroInTargetTab(config) {
 async function runTicketMacro(config) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  // Polls for any of the given CSS selectors until one matches or timeout elapses.
-  const waitForSel = async (selectors, timeout = 8000, interval = 150) => {
-    const list = Array.isArray(selectors) ? selectors : [selectors];
+  // Returns the first truthy value returned by `fn`, polling every `interval` ms
+  // up to `timeoutMs`. Returns null on timeout.
+  const waitFor = async (fn, timeoutMs = 4000, interval = 40) => {
     const start = Date.now();
-    while (Date.now() - start < timeout) {
-      for (const sel of list) {
-        const el = document.querySelector(sel);
-        if (el) return el;
-      }
+    while (Date.now() - start < timeoutMs) {
+      const v = fn();
+      if (v) return v;
       await sleep(interval);
     }
     return null;
   };
 
-  // Waits until the given element is removed from the DOM, used to detect when
-  // a modal dialog has been dismissed after submitting a note.
-  const waitForGone = async (el, timeout = 8000, interval = 100) => {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-      if (!document.contains(el)) return true;
-      await sleep(interval);
-    }
-    return false; // timed out; proceed anyway
+  // Like waitFor but also uses a MutationObserver so it reacts instantly to DOM
+  // changes rather than relying solely on polling.
+  const waitForMutation = (predicate, timeoutMs = 4000) => {
+    return new Promise((resolve) => {
+      const immediate = predicate();
+      if (immediate) return resolve(immediate);
+      const obs = new MutationObserver(() => {
+        const v = predicate();
+        if (v) { obs.disconnect(); resolve(v); }
+      });
+      obs.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+      setTimeout(() => { obs.disconnect(); resolve(null); }, timeoutMs);
+    });
   };
 
-  // Waits until a <select> element is populated with at least one non-empty option,
-  // handling cascading dropdowns that load asynchronously after a parent selection.
+  // Returns true if an element is visible (has layout or client rects).
+  const isVisible = (el) =>
+    !!(el && (el.offsetParent !== null || (el.getClientRects && el.getClientRects().length)));
+
+  // Dispatches a real MouseEvent click, falling back to el.click().
+  const click = (el) => {
+    if (!el) return false;
+    try { el.scrollIntoView({ block: "center", inline: "center" }); } catch {}
+    try {
+      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+      return true;
+    } catch {
+      try { el.click(); return true; } catch { return false; }
+    }
+  };
+
+  // Searches a root element for a button/anchor/input whose text exactly matches
+  // `text` (case-insensitive). Returns the element or null.
+  const findButtonByText = (root, text) => {
+    const target = (text || "").trim().toLowerCase();
+    for (const el of root.querySelectorAll("button, a, input[type='button'], input[type='submit']")) {
+      if (((el.textContent || el.value) || "").trim().toLowerCase() === target) return el;
+    }
+    return null;
+  };
+
+  // Like findButtonByText but uses includes() instead of exact match.
+  const findButtonContains = (root, text) => {
+    const target = (text || "").trim().toLowerCase();
+    for (const el of root.querySelectorAll("button, a, input[type='button'], input[type='submit']")) {
+      if (((el.textContent || el.value) || "").trim().toLowerCase().includes(target)) return el;
+    }
+    return null;
+  };
+
+  // Sets a <select> by value first (fast path), then falls back to text match.
+  const setSelectByValueOrText = (selectEl, value, text) => {
+    if (!selectEl) return;
+    if (value != null && value !== "") {
+      for (const opt of selectEl.options) {
+        if (opt.value === value) {
+          selectEl.value = value;
+          selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+          return;
+        }
+      }
+    }
+    if (text) {
+      const target = text.trim().toLowerCase();
+      for (const opt of selectEl.options) {
+        const t = (opt.textContent || opt.innerText || "").trim().toLowerCase();
+        if (t === target || t.includes(target)) {
+          selectEl.value = opt.value;
+          selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+          return;
+        }
+      }
+    }
+  };
+
+  // Waits until a <select> has at least one non-empty option (cascade load detection).
   const waitForOptions = async (selectEl, timeout = 6000, interval = 150) => {
     if (!selectEl) return;
     const start = Date.now();
     while (Date.now() - start < timeout) {
-      const nonEmpty = Array.from(selectEl.options).filter((o) => o.value !== "");
-      if (nonEmpty.length > 0) return;
+      if (Array.from(selectEl.options).some((o) => o.value !== "")) return;
       await sleep(interval);
     }
     console.warn("[Script Keeper] waitForOptions timed out for:", selectEl.id || selectEl.name);
   };
 
-  // Locates a <select> element by trying exact ID matches first, then a fuzzy scan
-  // of all selects matching any hint against id, name, or associated label text.
+  // Locates a <select> by exact ID first, then fuzzy-scans id/name/label text.
   const findSelect = (...hints) => {
     for (const hint of hints) {
       const el = document.getElementById(hint);
       if (el && el.tagName === "SELECT") return el;
     }
-    const allSelects = Array.from(document.querySelectorAll("select"));
-    for (const s of allSelects) {
+    for (const s of document.querySelectorAll("select")) {
       const id = (s.id || "").toLowerCase();
       const name = (s.name || "").toLowerCase();
-      const labelEl = s.closest("div")?.querySelector("label");
-      const labelText = labelEl ? labelEl.innerText.toLowerCase() : "";
+      const labelText = (s.closest("div")?.querySelector("label")?.innerText || "").toLowerCase();
       for (const hint of hints) {
         const h = hint.toLowerCase();
         if (id.includes(h) || name.includes(h) || labelText.includes(h)) return s;
@@ -246,50 +304,138 @@ async function runTicketMacro(config) {
     return null;
   };
 
-  // Sets a <select> value by finding an option whose text matches `text`
-  // (exact, case-insensitive) and dispatches a change event so the page reacts.
-  const setSelect = (el, text) => {
-    if (!el || !text) return false;
-    const target = text.trim().toLowerCase();
-    for (const opt of el.options) {
-      const t = (opt.textContent || opt.innerText || "").trim().toLowerCase();
-      if (t === target) {
-        el.value = opt.value;
-        el.dispatchEvent(new Event("change", { bubbles: true }));
-        return true;
-      }
-    }
-    console.warn("[Script Keeper] Could not match option:", text);
-    return false;
+  // --- Overlay handling ---
+
+  // Returns the currently visible overlay element (file preview or modal), or null.
+  const getTopOverlay = () => {
+    const fp = document.querySelector("#FilePreviewModal");
+    if (fp && isVisible(fp)) return fp;
+    const mfp = document.querySelector(".mfp-wrap.mfp-ready");
+    if (mfp && isVisible(mfp)) return mfp;
+    return Array.from(document.querySelectorAll(".modal.show, .modal.fade.in")).find(isVisible) || null;
   };
 
-  // Searches a root element for a button/anchor/input whose visible text or value
-  // exactly matches `text` (case-insensitive). Returns the element or null.
-  const findButtonByText = (root, text) => {
-    const target = text.trim().toLowerCase();
+  // Closes any visible overlay by clicking its close button or pressing Escape,
+  // then waits for it to disappear.
+  const closeOverlayFast = async () => {
+    const overlay = getTopOverlay();
+    if (!overlay) return true;
+    const closeBtn =
+      overlay.querySelector(".mfp-close") ||
+      overlay.querySelector("[data-dismiss='modal']") ||
+      overlay.querySelector(".close") ||
+      findButtonByText(overlay, "close") ||
+      findButtonContains(overlay, "close");
+    if (closeBtn && isVisible(closeBtn)) click(closeBtn);
+    else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    return !!(await waitFor(() => !getTopOverlay(), 2500, 50));
+  };
+
+  // --- Notes modal ---
+
+  // Returns the #modal-addnote element if it is currently visible, or null.
+  const getNotesModalRoot = () => {
+    const wrap = document.querySelector(".mfp-wrap.mfp-ready");
+    if (wrap && isVisible(wrap)) {
+      const add = wrap.querySelector(".mfp-content #modal-addnote");
+      if (add && isVisible(add)) return add;
+    }
+    const add2 = document.querySelector("#modal-addnote");
+    if (add2 && isVisible(add2)) return add2;
+    return null;
+  };
+
+  // Clicks the Add Note button then waits (mutation-driven) for the modal to appear.
+  const openNotesModal = async () => {
+    const addNoteButton =
+      document.getElementById("aAddNotes") ||
+      Array.from(document.querySelectorAll("a,button")).find((el) => {
+        const txt = (el.textContent || "").trim().toLowerCase();
+        return txt === "add new" || txt === "add note" || txt === "add/send note" || txt === "add/send notes";
+      }) || null;
+    if (!addNoteButton) return null;
+    click(addNoteButton);
     return (
-      Array.from(
-        root.querySelectorAll("button, a, input[type='button'], input[type='submit']")
-      ).find(
-        (el) => ((el.textContent || el.value) || "").trim().toLowerCase() === target
-      ) || null
+      (await waitForMutation(() => getNotesModalRoot(), 4500)) ||
+      (await waitFor(() => getNotesModalRoot(), 4500, 50))
     );
   };
 
-  // Unchecks any "contact", "cc", or "resource" recipient checkboxes inside the
-  // note dialog root to prevent unintended notifications when submitting notes.
-  const uncheckRecipientCheckboxes = (root) => {
-    root.querySelectorAll("input[type='checkbox']").forEach((box) => {
-      const labelText = (box.closest("label")?.innerText || box.id || "").toLowerCase();
-      if (
-        (labelText.includes("contact") || labelText.includes("cc") || labelText.includes("resource")) &&
-        box.checked
-      ) {
-        box.checked = false;
-        box.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    });
+  // --- Checkbox unchecking ---
+
+  // Clicks a checkbox by ID to uncheck it and fires a change event.
+  const forceUncheck = (id) => {
+    const cb = document.getElementById(id);
+    if (!cb) return false;
+    if (cb.checked) { click(cb); cb.dispatchEvent(new Event("change", { bubbles: true })); }
+    return true;
   };
+
+  // Waits until the checkbox with `id` is unchecked (or absent).
+  const waitCheckboxUnchecked = (id) =>
+    waitFor(() => {
+      const cb = document.getElementById(id);
+      return (!cb || cb.checked === false) ? true : null;
+    }, 1500, 40);
+
+  // --- Editor detection and note insertion ---
+
+  // Returns the textarea editor inside the modal, or null.
+  const getTextarea = (root) =>
+    root.querySelector("#txtNoteDescription") ||
+    root.querySelector("textarea[id*='NoteDescription']") ||
+    root.querySelector("textarea[name*='Note']");
+
+  // Returns the ProseMirror editor inside the modal, or null.
+  const getProseMirror = (root) =>
+    root.querySelector("#supportNoteEditor_detailTab .ProseMirror[contenteditable='true']") ||
+    root.querySelector(".ProseMirror[contenteditable='true']");
+
+  // Waits for either a textarea or a fully-mounted ProseMirror editor to appear.
+  // ProseMirror is considered mounted once it has height >= 60px.
+  const waitEditorReady = async (modalRoot) => {
+    const ta = await waitFor(() => {
+      const t = getTextarea(modalRoot);
+      return (t && isVisible(t)) ? t : null;
+    }, 2500, 40);
+    if (ta) return { textarea: ta, prose: null };
+
+    const pm = await waitFor(() => {
+      const p = getProseMirror(modalRoot);
+      if (!p || !isVisible(p)) return null;
+      if (p.getBoundingClientRect().height < 60) return null;
+      return p;
+    }, 3500, 40);
+    return pm ? { textarea: null, prose: pm } : null;
+  };
+
+  // Sets a textarea value and fires input/change events.
+  const setTextareaNote = (textarea, text) => {
+    textarea.value = text;
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    textarea.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+
+  // Inserts text into a ProseMirror editor using keyboard events + execCommand
+  // so ProseMirror's internal transaction system stays in sync.
+  const setProseMirrorNote = async (pm, text) => {
+    pm.focus();
+    await sleep(40);
+    pm.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "a", ctrlKey: true }));
+    pm.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Backspace" }));
+    await sleep(60);
+    try { document.execCommand("insertText", false, text); } catch {}
+    // Fallback if execCommand was blocked
+    if (!(pm.textContent || "").trim().length) {
+      pm.textContent = text;
+      pm.dispatchEvent(new InputEvent("input", { bubbles: true }));
+    }
+  };
+
+  // Waits until the notes modal is no longer visible.
+  const waitModalClosed = () => waitFor(() => !getNotesModalRoot(), 5000, 50);
+
+  // --- Item auto-detection ---
 
   const itemCategories = {
     "No Withdrawal Activity": [
@@ -412,142 +558,94 @@ async function runTicketMacro(config) {
     ]
   };
 
-  // Inspects the ticket title and most recent note to auto-detect which item
-  // category applies (e.g. "Dispenser", "Lost Comms") based on keyword matching
-  // against the itemCategories map. Returns the matched label or null.
+  // Inspects the ticket title and most recent note to auto-detect the item category.
   const getLabel = () => {
     const titleEl = document.getElementById("txtTitle");
-    const titleValue = titleEl ? titleEl.value.trim().toLowerCase() : "";
-    const ticketNotes = Array.from(document.querySelectorAll(".notice_info"));
-    const lastNote = ticketNotes.at(-1)?.textContent.trim().toLowerCase() || "";
+    const titleValue = (titleEl ? titleEl.value : "").trim().toLowerCase();
+    const lastNote = Array.from(document.querySelectorAll(".notice_info")).at(-1)?.textContent.trim().toLowerCase() || "";
     for (const [label, keywords] of Object.entries(itemCategories)) {
-      for (const keyword of keywords) {
-        if (titleValue.includes(keyword.toLowerCase()) || lastNote.includes(keyword.toLowerCase())) {
-          return label;
-        }
+      for (const kw of keywords) {
+        if (titleValue.includes(kw.toLowerCase()) || lastNote.includes(kw.toLowerCase())) return label;
       }
     }
     return null;
   };
 
-  // Clicks the "Add Note" button on the ticket page, then waits for the note
-  // editor to appear — supports both plain <textarea> and ProseMirror
-  // (contenteditable div). Returns the editor element and its modal/dialog root.
-  // Throws if either element cannot be found.
-  const openNoteDialog = async () => {
-    const addNoteButton =
-      document.getElementById("aAddNotes") ||
-      Array.from(document.querySelectorAll("a,button")).find((el) => {
-        const txt = (el.textContent || "").trim().toLowerCase();
-        return txt === "add new" || txt === "add note" || txt === "add/send note";
-      }) ||
-      null;
-
-    if (!addNoteButton) throw new Error("Add Note button not found");
-    addNoteButton.click();
-
-    const noteArea = await waitForSel([
-      "#txtNoteDescription",
-      "textarea#txtNoteDescription",
-      "textarea[id*='NoteDescription']",
-      "textarea[name*='Note']",
-      ".ProseMirror[contenteditable='true']",
-      "div[contenteditable='true']"
-    ]);
-    if (!noteArea) throw new Error("Note text area not found");
-
-    const modalRoot = noteArea.closest(".modal") || noteArea.closest(".ui-dialog") || document;
-    return { noteArea, modalRoot };
-  };
-
-  // Sets the note text, unchecks recipient checkboxes, then clicks Submit and
-  // waits for the dialog to close. Handles both plain <textarea> and ProseMirror
-  // (contenteditable div) editors: textareas use .value + events; ProseMirror
-  // uses focus + innerText assignment + events. Checkboxes are unchecked after
-  // the text is set so the modal is fully rendered before we query it.
-  const fillAndSubmitNote = async (noteArea, modalRoot) => {
-    if (config.noteText) {
-      if (noteArea.tagName === "TEXTAREA") {
-        noteArea.value = config.noteText;
-        noteArea.dispatchEvent(new Event("input", { bubbles: true }));
-        noteArea.dispatchEvent(new Event("change", { bubbles: true }));
-      } else {
-        // ProseMirror contenteditable
-        noteArea.focus();
-        noteArea.innerText = config.noteText;
-        noteArea.dispatchEvent(new Event("input", { bubbles: true }));
-        noteArea.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    }
-
-    // Uncheck after text entry so the full modal DOM (including checkboxes)
-    // is guaranteed to be rendered before we query it.
-    uncheckRecipientCheckboxes(modalRoot);
-
-    const submitBtn = findButtonByText(modalRoot, "submit");
-    if (submitBtn) {
-      submitBtn.click();
-      await waitForGone(noteArea);
-    } else {
-      console.warn("[Script Keeper] Submit button not found in note dialog.");
-    }
-  };
-
-  // Sets the Type, SubType, Item, and State dropdowns on the ticket form.
-  // Waits for cascading dropdowns to populate before setting each value.
-  // Uses autoDetectItem to derive the Item value from the ticket title/notes if needed.
+  // Sets Type, SubType, Item, and State dropdowns, waiting for cascading loads.
   const setDropdowns = async () => {
     const typeSelect = findSelect("ddlType", "type");
-    if (!typeSelect) { console.warn("[Script Keeper] Type dropdown not found."); return; }
-    setSelect(typeSelect, config.typeText);
+    if (typeSelect) setSelectByValueOrText(typeSelect, config.typeValue, config.typeText);
+    else console.warn("[Script Keeper] Type dropdown not found.");
 
     const subTypeSelect = findSelect("ddlSubType", "subtype", "sub-type", "sub type");
-    if (!subTypeSelect) { console.warn("[Script Keeper] Sub-Type dropdown not found."); return; }
-    await waitForOptions(subTypeSelect);
-    setSelect(subTypeSelect, config.subTypeText);
+    if (subTypeSelect) {
+      await waitForOptions(subTypeSelect);
+      setSelectByValueOrText(subTypeSelect, config.subTypeValue, config.subTypeText);
+    } else console.warn("[Script Keeper] Sub-Type dropdown not found.");
 
     const itemSelect = findSelect("ddlSubTypeItem", "item");
-    if (!itemSelect) { console.warn("[Script Keeper] Item dropdown not found."); return; }
-    await waitForOptions(itemSelect);
-    const itemText = config.autoDetectItem ? getLabel() : config.itemText;
-    if (itemText) {
-      setSelect(itemSelect, itemText);
-    } else {
-      console.warn("[Script Keeper] Could not auto-detect item from ticket title/notes.");
-    }
+    if (itemSelect) {
+      await waitForOptions(itemSelect);
+      const itemText = config.autoDetectItem ? getLabel() : config.itemText;
+      if (itemText) setSelectByValueOrText(itemSelect, config.itemValue, itemText);
+      else console.warn("[Script Keeper] Could not resolve item text.");
+    } else console.warn("[Script Keeper] Item dropdown not found.");
 
     if (config.stateText) {
       const stateSelect = findSelect("ddlStatus", "status", "state");
-      if (stateSelect) {
-        setSelect(stateSelect, config.stateText);
-      } else {
-        console.warn("[Script Keeper] State/Status dropdown not found.");
-      }
+      if (stateSelect) setSelectByValueOrText(stateSelect, "", config.stateText);
+      else console.warn("[Script Keeper] State/Status dropdown not found.");
     }
   };
 
-  // Clicks the Save button on the ticket form to persist the macro changes.
+  // Clicks the Save button on the ticket form.
   const save = () => {
     const saveBtn =
       findButtonByText(document, "save") ||
-      Array.from(document.querySelectorAll("a.btn.btn-primary, button.btn.btn-primary")).find(
-        (el) => (el.textContent || "").trim().toLowerCase() === "save"
-      ) ||
+      Array.from(document.querySelectorAll("a.btn.btn-primary, button.btn.btn-primary"))
+        .find((el) => (el.textContent || "").trim().toLowerCase() === "save") ||
       null;
-
-    if (saveBtn) {
-      saveBtn.click();
-    } else {
-      console.warn("[Script Keeper] Save button not found.");
-    }
+    if (saveBtn) click(saveBtn);
+    else console.warn("[Script Keeper] Save button not found.");
   };
 
   try {
     console.log("[Script Keeper] Running macro:", config?.name);
-    const { noteArea, modalRoot } = await openNoteDialog();
-    await fillAndSubmitNote(noteArea, modalRoot);
+
+    // 1) Close any overlay that might block the Add Note button
+    await closeOverlayFast();
+
+    // 2) Open the notes modal
+    const modalRoot = await openNotesModal();
+    if (!modalRoot) throw new Error("Notes modal not found");
+
+    // 3) Uncheck recipient checkboxes by ID and verify
+    forceUncheck("chkContact");
+    forceUncheck("chkResources");
+    forceUncheck("chkCC") || forceUncheck("chkCc");
+    await Promise.all([
+      waitCheckboxUnchecked("chkContact"),
+      waitCheckboxUnchecked("chkResources"),
+      waitCheckboxUnchecked("chkCC")
+    ]);
+
+    // 4) Wait for editor to mount, then write the note
+    const editor = await waitEditorReady(modalRoot);
+    if (!editor) throw new Error("Note editor not ready");
+    if (config.noteText) {
+      if (editor.textarea) setTextareaNote(editor.textarea, config.noteText);
+      else await setProseMirrorNote(editor.prose, config.noteText);
+    }
+
+    // 5) Submit and wait for modal to close
+    const submitBtn = findButtonByText(modalRoot, "submit") || findButtonContains(modalRoot, "submit");
+    if (submitBtn) click(submitBtn);
+    await waitModalClosed();
+
+    // 6) Set dropdowns and save
     await setDropdowns();
     save();
+
     return { success: true };
   } catch (err) {
     console.error("[Script Keeper] Macro error:", err);
