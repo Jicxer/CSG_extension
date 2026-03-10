@@ -39,11 +39,12 @@ Leave this window open in the background.
 
 ## Daily Workflow
 
-1. **On your VM:** write code and push to `jicxer-test` as normal
+1. **On your VM:** write code and push to your branch as normal
 2. **On your host:** the watcher detects the new commit within 60 seconds and pulls automatically
 3. Go to `edge://extensions/` and click the **reload icon** on your extension
 4. Done 
 
+This can also be done without a VM and just push your code to branch while having the script running in the background.
 ---
 
 ## Troubleshooting
