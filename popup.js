@@ -460,28 +460,29 @@ async function runTicketMacro(config) {
     return { noteArea, modalRoot };
   };
 
-  // Unchecks recipient checkboxes, sets the note text, then clicks Submit and
+  // Sets the note text, unchecks recipient checkboxes, then clicks Submit and
   // waits for the dialog to close. Handles both plain <textarea> and ProseMirror
   // (contenteditable div) editors: textareas use .value + events; ProseMirror
-  // uses focus + selectAll + execCommand('insertText') so the editor's own
-  // transaction system processes the change correctly.
+  // uses focus + innerText assignment + events. Checkboxes are unchecked after
+  // the text is set so the modal is fully rendered before we query it.
   const fillAndSubmitNote = async (noteArea, modalRoot) => {
-    uncheckRecipientCheckboxes(modalRoot);
-
     if (config.noteText) {
       if (noteArea.tagName === "TEXTAREA") {
         noteArea.value = config.noteText;
         noteArea.dispatchEvent(new Event("input", { bubbles: true }));
         noteArea.dispatchEvent(new Event("change", { bubbles: true }));
       } else {
-        // ProseMirror contenteditable — must go through execCommand so the
-        // editor's internal state stays in sync with the DOM.
+        // ProseMirror contenteditable
         noteArea.focus();
         noteArea.innerText = config.noteText;
         noteArea.dispatchEvent(new Event("input", { bubbles: true }));
         noteArea.dispatchEvent(new Event("change", { bubbles: true }));
       }
     }
+
+    // Uncheck after text entry so the full modal DOM (including checkboxes)
+    // is guaranteed to be rendered before we query it.
+    uncheckRecipientCheckboxes(modalRoot);
 
     const submitBtn = findButtonByText(modalRoot, "submit");
     if (submitBtn) {
