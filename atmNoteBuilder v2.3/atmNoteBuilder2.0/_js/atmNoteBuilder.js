@@ -209,7 +209,13 @@ $(document).on("cut", "textarea.atmNotes, textarea.HatmNotes", function (e) {
   
   //**********************************************************
   //NCR 
-  //What happens when you click add button for the NCR tab
+  /**
+   * NCR "Add" button handler. Assembles the ATM service note from all checked
+   * checkboxes, radio buttons, and text inputs on the NCR tab (faults, cassettes,
+   * work done, tests, results, network status, fix status), writes the compiled
+   * text into the atmNotes textarea, copies it to the clipboard as HTML, and
+   * highlights the textarea.
+   */
   $('.addResults').click(function () {
 	$('.atmNotes').val("");
 	var addFaults = "";
@@ -283,11 +289,14 @@ $(document).on("cut", "textarea.atmNotes, textarea.HatmNotes", function (e) {
 
 	});
 	
+	// NCR "Clear" button handler. Wipes only the notes textarea, leaving all other fields intact.
 	$('.clear').click(function () {
 		/* Select the text field */
         $('.atmNotes').val("");
 	});
 	
+	// NCR "Update Clipboard" button handler. Re-copies the current atmNotes content
+	// to the clipboard without regenerating the note text.
 	$('.updateClip').click(function () {
 		/* Copy notes to clipboard (plain text, consistent) */
 		copyNotesAsHtml("textarea.atmNotes");

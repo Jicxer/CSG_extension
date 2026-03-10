@@ -82,6 +82,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
+/**
+ * Displays a status message in the popup's status bar element.
+ * Success messages automatically clear and hide after 4 seconds.
+ * @param {string} msg - The message text to display.
+ * @param {"success"|"error"|""} type - CSS class applied to the status element.
+ */
 function showStatus(msg, type) {
   const el = document.getElementById("status");
   if (!el) return;
@@ -95,6 +101,11 @@ function showStatus(msg, type) {
   }
 }
 
+/**
+ * Reads the `tabId` query parameter from the popup window's URL.
+ * Used as a fallback when the background script cannot determine the target tab.
+ * @returns {number|null} The tab ID parsed from the URL, or null if absent/invalid.
+ */
 function getTargetTabIdFromQuery() {
   try {
     const params = new URLSearchParams(window.location.search || "");
@@ -108,6 +119,12 @@ function getTargetTabIdFromQuery() {
   }
 }
 
+/**
+ * Asks the background service worker for the ID of the most recently active
+ * real (non-extension, non-browser) tab. Returns a Promise that resolves
+ * to the tab ID or null if none is found.
+ * @returns {Promise<number|null>}
+ */
 function getLastFocusedTicketTabId() {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage({ type: "GET_TARGET_TAB_ID" }, (response) => {
@@ -121,6 +138,13 @@ function getLastFocusedTicketTabId() {
   });
 }
 
+/**
+ * Entry point for executing a macro. Resolves the target tab (via background
+ * script or URL query param), then injects either `runAutofill` or
+ * `runTicketMacro` into that tab via chrome.scripting.executeScript.
+ * Updates the popup status bar with the outcome.
+ * @param {Object} config - The macro configuration object from storage.
+ */
 async function runMacroInTargetTab(config) {
   showStatus("Running\u2026", "");
   document.getElementById("status").style.display = "block";
@@ -151,10 +175,19 @@ async function runMacroInTargetTab(config) {
   }
 }
 
-// Runs in the context of the ticket page — must be entirely self-contained.
+/**
+ * Injected into the ticket page to execute a standard macro.
+ * Must be entirely self-contained (no closure over popup scope).
+ * Steps: opens the Add Note dialog, fills and submits the note, sets
+ * the Type/SubType/Item/State dropdowns, then clicks Save.
+ * @param {Object} config - Macro config with noteText, typeText, subTypeText,
+ *   itemText, stateText, and autoDetectItem flags.
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
 async function runTicketMacro(config) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  // Polls for any of the given CSS selectors until one matches or timeout elapses.
   const waitForSel = async (selectors, timeout = 8000, interval = 150) => {
     const list = Array.isArray(selectors) ? selectors : [selectors];
     const start = Date.now();
@@ -168,7 +201,8 @@ async function runTicketMacro(config) {
     return null;
   };
 
-  // Wait until an element is removed from the DOM (modal close detection).
+  // Waits until the given element is removed from the DOM, used to detect when
+  // a modal dialog has been dismissed after submitting a note.
   const waitForGone = async (el, timeout = 8000, interval = 100) => {
     const start = Date.now();
     while (Date.now() - start < timeout) {
@@ -178,7 +212,8 @@ async function runTicketMacro(config) {
     return false; // timed out; proceed anyway
   };
 
-  // Wait until a <select> has at least one non-empty option (cascade load detection).
+  // Waits until a <select> element is populated with at least one non-empty option,
+  // handling cascading dropdowns that load asynchronously after a parent selection.
   const waitForOptions = async (selectEl, timeout = 6000, interval = 150) => {
     if (!selectEl) return;
     const start = Date.now();
@@ -190,7 +225,8 @@ async function runTicketMacro(config) {
     console.warn("[Script Keeper] waitForOptions timed out for:", selectEl.id || selectEl.name);
   };
 
-  // Find a <select> by exact ID first, then fall back to scanning by id/name/label.
+  // Locates a <select> element by trying exact ID matches first, then a fuzzy scan
+  // of all selects matching any hint against id, name, or associated label text.
   const findSelect = (...hints) => {
     for (const hint of hints) {
       const el = document.getElementById(hint);
@@ -210,7 +246,8 @@ async function runTicketMacro(config) {
     return null;
   };
 
-  // Set a <select> by matching option text (exact, case-insensitive).
+  // Sets a <select> value by finding an option whose text matches `text`
+  // (exact, case-insensitive) and dispatches a change event so the page reacts.
   const setSelect = (el, text) => {
     if (!el || !text) return false;
     const target = text.trim().toLowerCase();
@@ -226,6 +263,8 @@ async function runTicketMacro(config) {
     return false;
   };
 
+  // Searches a root element for a button/anchor/input whose visible text or value
+  // exactly matches `text` (case-insensitive). Returns the element or null.
   const findButtonByText = (root, text) => {
     const target = text.trim().toLowerCase();
     return (
@@ -237,6 +276,8 @@ async function runTicketMacro(config) {
     );
   };
 
+  // Unchecks any "contact", "cc", or "resource" recipient checkboxes inside the
+  // note dialog root to prevent unintended notifications when submitting notes.
   const uncheckRecipientCheckboxes = (root) => {
     root.querySelectorAll("input[type='checkbox']").forEach((box) => {
       const labelText = (box.closest("label")?.innerText || box.id || "").toLowerCase();
@@ -371,6 +412,9 @@ async function runTicketMacro(config) {
     ]
   };
 
+  // Inspects the ticket title and most recent note to auto-detect which item
+  // category applies (e.g. "Dispenser", "Lost Comms") based on keyword matching
+  // against the itemCategories map. Returns the matched label or null.
   const getLabel = () => {
     const titleEl = document.getElementById("txtTitle");
     const titleValue = titleEl ? titleEl.value.trim().toLowerCase() : "";
@@ -386,6 +430,9 @@ async function runTicketMacro(config) {
     return null;
   };
 
+  // Clicks the "Add Note" button on the ticket page, then waits for the note
+  // textarea to appear. Returns the textarea element and its modal/dialog root.
+  // Throws if either element cannot be found.
   const openNoteDialog = async () => {
     const addNoteButton =
       document.getElementById("aAddNotes") ||
@@ -410,6 +457,8 @@ async function runTicketMacro(config) {
     return { noteArea, modalRoot };
   };
 
+  // Unchecks recipient checkboxes, sets the note text, fires input/change events,
+  // then clicks the Submit button and waits for the dialog to close.
   const fillAndSubmitNote = async (noteArea, modalRoot) => {
     uncheckRecipientCheckboxes(modalRoot);
 
@@ -428,6 +477,9 @@ async function runTicketMacro(config) {
     }
   };
 
+  // Sets the Type, SubType, Item, and State dropdowns on the ticket form.
+  // Waits for cascading dropdowns to populate before setting each value.
+  // Uses autoDetectItem to derive the Item value from the ticket title/notes if needed.
   const setDropdowns = async () => {
     const typeSelect = findSelect("ddlType", "type");
     if (!typeSelect) { console.warn("[Script Keeper] Type dropdown not found."); return; }
@@ -458,6 +510,7 @@ async function runTicketMacro(config) {
     }
   };
 
+  // Clicks the Save button on the ticket form to persist the macro changes.
   const save = () => {
     const saveBtn =
       findButtonByText(document, "save") ||
@@ -486,7 +539,15 @@ async function runTicketMacro(config) {
   }
 }
 
-// Runs in the context of the ticket page — must be entirely self-contained.
+/**
+ * Injected into the ticket page to automatically populate ticket fields.
+ * Must be entirely self-contained (no closure over popup scope).
+ * Steps: extracts the Terminal ID from the title, fetches ticket history to
+ * determine the correct company and location, then sets status to In Progress,
+ * updates Type/SubType/Item dropdowns, selects the matching location, and
+ * associates the correct equipment record.
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
 async function runAutofill() {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -500,6 +561,8 @@ async function runAutofill() {
     return null;
   };
 
+  // Polls until a table matching `selector` has at least one row with `minCells`
+  // columns, ensuring the equipment table has fully loaded before row selection.
   const waitForTableReady = async (selector, minCells = 13, timeout = 8000, interval = 150) => {
     const start = Date.now();
     while (Date.now() - start < timeout) {
@@ -516,12 +579,17 @@ async function runAutofill() {
     return null;
   };
 
+  // Finds a <select> option whose text matches `label` (case-insensitive).
+  // Returns the option element or null if not found.
   const findOption = (dropdown, label) => {
     return Array.from(dropdown.options).find(
       (opt) => opt.textContent.trim().toLowerCase() === label.toLowerCase()
     ) || null;
   };
 
+  // Returns the most frequently occurring value of `prop` across an array of objects,
+  // along with its count. Used to determine the most common CustomerName or Location
+  // from ticket history to pre-select the correct dropdown option.
   const mostFrequentValue = (arr, prop) => {
     if (!arr || !prop) return { value: null, count: null };
     const freq = arr.reduce((acc, item) => {
@@ -552,6 +620,8 @@ async function runAutofill() {
     /(\w{6,8})(?=\sTerminal)/
   ];
 
+  // Attempts to extract a 6–8 character Terminal ID from a ticket title string
+  // by trying each regex in `tidRegexes` in order. Returns the first match or null.
   const extractTID = (title) => {
     for (const re of tidRegexes) {
       const m = title.match(re);
@@ -560,6 +630,8 @@ async function runAutofill() {
     return null;
   };
 
+  // Fetches the 50 most recent tickets matching the given Terminal ID from the
+  // dashboard API. Returns an array of simplified ticket objects or null on failure.
   const fetchTicketHistory = async (tid) => {
     if (!tid) return null;
     const res = await fetch("https://cc.cooksolutionsgroup.com/Support/Dashboard/GetDashboardTickets", {
@@ -689,6 +761,7 @@ async function runAutofill() {
     return null;
   };
 
+  // Sets the ticket Status dropdown to "In Progress" to indicate work has begun.
   const setStatusToInProgress = async () => {
     const statusDropDown = await waitForSel("#ddlStatus");
     if (!statusDropDown) { console.warn("[Script Keeper] Status dropdown not found."); return; }
@@ -696,6 +769,8 @@ async function runAutofill() {
     if (opt) statusDropDown.value = opt.value;
   };
 
+  // If the ticket is on the ATM/ITM board, automatically sets Type to "Hardware"
+  // and SubType to "Network Notification" as the standard categorization.
   const autoChangeType = async () => {
     const boardDropDown = await waitForSel("#ddlBoard");
     if (!boardDropDown) return;
@@ -722,6 +797,8 @@ async function runAutofill() {
     }
   };
 
+  // Auto-detects the Item category from the ticket title/notes and sets the
+  // SubTypeItem dropdown accordingly.
   const selectItem = async () => {
     const itemDropDown = await waitForSel("#ddlSubTypeItem");
     if (!itemDropDown) { console.warn("[Script Keeper] Item dropdown not found."); return; }
@@ -731,6 +808,10 @@ async function runAutofill() {
     if (opt) itemDropDown.value = opt.value;
   };
 
+  // Selects the most frequently occurring CustomerName from ticket history in the
+  // company dropdown. Falls back to "Cook Solutions Group" if history is unavailable.
+  // Skips if a non-default company is already selected.
+  // @returns {boolean} True if the company was changed (triggers location selection).
   const selectCompany = async (companyDropDown, ticketHistory) => {
     if (companyDropDown.options.length <= 2) return false;
     const bomOpt = findOption(companyDropDown, "Bank Michigan");
@@ -754,6 +835,9 @@ async function runAutofill() {
     return true;
   };
 
+  // Waits for the location dropdown to populate, then selects the location whose
+  // value is contained in the most frequent Location from ticket history.
+  // Returns an object with the selected location's Terminal ID subtitle, or null.
   const selectLocation = async (ticketHistory) => {
     const locationDropDown = await waitForSel("#ddlLocation");
     if (!locationDropDown) { console.warn("[Script Keeper] Location dropdown not found."); return null; }
@@ -778,6 +862,9 @@ async function runAutofill() {
     return { res: true, TID: matched.dataset?.subtitle3 || "" };
   };
 
+  // Opens the Add Equipment dialog, waits for the equipment table to load, finds
+  // the row whose terminal ID matches the location TID, selects its checkbox,
+  // then clicks "Associated Equipment" to link it to the ticket.
   const addEquipment = async (locationTID) => {
     const addEquipBtn =
       document.getElementById("btnAddNewEquipment") ||

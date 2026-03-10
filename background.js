@@ -1,3 +1,10 @@
+/**
+ * Determines whether a tab represents a real, navigable web page.
+ * Filters out internal browser pages (chrome://, edge://, about:) and
+ * extension pages so they are never targeted by the macro runner.
+ * @param {chrome.tabs.Tab} tab - The tab object to evaluate.
+ * @returns {boolean} True if the tab has a usable URL.
+ */
 function isRealPage(tab) {
   if (!tab || !tab.url) return false;
   const url = tab.url;

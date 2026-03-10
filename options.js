@@ -31,18 +31,32 @@ let macros = [];
 
 // --- Storage helpers ---
 
+/**
+ * Loads macros from chrome.storage.sync into the in-memory `macros` array.
+ * Falls back to DEFAULT_MACROS if nothing is stored yet, then renders the table.
+ */
 async function loadMacros() {
   const stored = await chrome.storage.sync.get("macros");
   macros = (stored.macros && stored.macros.length) ? stored.macros : [...DEFAULT_MACROS];
   renderTable();
 }
 
+/**
+ * Persists the current in-memory `macros` array to chrome.storage.sync.
+ * @returns {Promise<void>}
+ */
 function saveMacros() {
   return chrome.storage.sync.set({ macros });
 }
 
 // --- Table rendering ---
 
+/**
+ * Escapes a string for safe insertion into HTML, converting &, <, >, and "
+ * to their corresponding HTML entities.
+ * @param {string} str - The raw string to escape.
+ * @returns {string} The HTML-safe string.
+ */
 function escHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -51,6 +65,10 @@ function escHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * Re-renders the macro list table from the current `macros` array.
+ * Displays a placeholder row when there are no macros.
+ */
 function renderTable() {
   const tbody = document.getElementById("macroList");
   tbody.innerHTML = "";
@@ -88,6 +106,11 @@ document.getElementById("macroList").addEventListener("click", (e) => {
 
 // --- Form helpers ---
 
+/**
+ * Populates the edit form with data from an existing macro so it can be updated.
+ * Locks the ID field (IDs should not change on edit) and updates the form title/button labels.
+ * @param {number} i - Index of the macro in the `macros` array to edit.
+ */
 function populateForm(i) {
   const m = macros[i];
   document.getElementById("editIndex").value = i;
@@ -105,6 +128,10 @@ function populateForm(i) {
   document.getElementById("macroForm").scrollIntoView({ behavior: "smooth" });
 }
 
+/**
+ * Resets the macro form to "Add" mode: clears all fields, re-enables the ID
+ * field, and restores the default form title and button labels.
+ */
 function clearForm() {
   document.getElementById("editIndex").value = "-1";
   document.getElementById("macroForm").reset();
@@ -115,6 +142,11 @@ function clearForm() {
 
 // --- CRUD ---
 
+/**
+ * Prompts the user for confirmation, then removes the macro at index `i`
+ * from the array, saves to storage, re-renders the table, and shows a status message.
+ * @param {number} i - Index of the macro to delete.
+ */
 async function deleteMacro(i) {
   if (!confirm(`Delete macro "${macros[i].name}"?`)) return;
   macros.splice(i, 1);
@@ -169,6 +201,12 @@ document.getElementById("btnReset").addEventListener("click", async () => {
 
 // --- Status bar ---
 
+/**
+ * Displays a status message in the status bar element.
+ * Success messages automatically clear after 4 seconds.
+ * @param {string} msg - The message text to display.
+ * @param {"success"|"error"|""} type - CSS class applied to the status element.
+ */
 function showStatus(msg, type) {
   const el = document.getElementById("statusMsg");
   el.textContent = msg;
