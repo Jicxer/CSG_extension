@@ -431,7 +431,8 @@ async function runTicketMacro(config) {
   };
 
   // Clicks the "Add Note" button on the ticket page, then waits for the note
-  // textarea to appear. Returns the textarea element and its modal/dialog root.
+  // editor to appear — supports both plain <textarea> and ProseMirror
+  // (contenteditable div). Returns the editor element and its modal/dialog root.
   // Throws if either element cannot be found.
   const openNoteDialog = async () => {
     const addNoteButton =
@@ -449,7 +450,9 @@ async function runTicketMacro(config) {
       "#txtNoteDescription",
       "textarea#txtNoteDescription",
       "textarea[id*='NoteDescription']",
-      "textarea[name*='Note']"
+      "textarea[name*='Note']",
+      ".ProseMirror[contenteditable='true']",
+      "div[contenteditable='true']"
     ]);
     if (!noteArea) throw new Error("Note text area not found");
 
@@ -457,15 +460,27 @@ async function runTicketMacro(config) {
     return { noteArea, modalRoot };
   };
 
-  // Unchecks recipient checkboxes, sets the note text, fires input/change events,
-  // then clicks the Submit button and waits for the dialog to close.
+  // Unchecks recipient checkboxes, sets the note text, then clicks Submit and
+  // waits for the dialog to close. Handles both plain <textarea> and ProseMirror
+  // (contenteditable div) editors: textareas use .value + events; ProseMirror
+  // uses focus + selectAll + execCommand('insertText') so the editor's own
+  // transaction system processes the change correctly.
   const fillAndSubmitNote = async (noteArea, modalRoot) => {
     uncheckRecipientCheckboxes(modalRoot);
 
     if (config.noteText) {
-      noteArea.value = config.noteText;
-      noteArea.dispatchEvent(new Event("input", { bubbles: true }));
-      noteArea.dispatchEvent(new Event("change", { bubbles: true }));
+      if (noteArea.tagName === "TEXTAREA") {
+        noteArea.value = config.noteText;
+        noteArea.dispatchEvent(new Event("input", { bubbles: true }));
+        noteArea.dispatchEvent(new Event("change", { bubbles: true }));
+      } else {
+        // ProseMirror contenteditable — must go through execCommand so the
+        // editor's internal state stays in sync with the DOM.
+        noteArea.focus();
+        noteArea.innerText = config.noteText;
+        noteArea.dispatchEvent(new Event("input", { bubbles: true }));
+        noteArea.dispatchEvent(new Event("change", { bubbles: true }));
+      }
     }
 
     const submitBtn = findButtonByText(modalRoot, "submit");
@@ -539,6 +554,7 @@ async function runTicketMacro(config) {
   }
 }
 
+//=============================================================================Auto Fill functionality=============================================================================\\
 /**
  * Injected into the ticket page to automatically populate ticket fields.
  * Must be entirely self-contained (no closure over popup scope).
@@ -814,7 +830,7 @@ async function runAutofill() {
   // @returns {boolean} True if the company was changed (triggers location selection).
   const selectCompany = async (companyDropDown, ticketHistory) => {
     if (companyDropDown.options.length <= 2) return false;
-    const bomOpt = findOption(companyDropDown, "Bank Michigan");
+    const bomOpt = findOption(companyDropDown, "West Michigan Credit Union");
     if (companyDropDown.selectedIndex !== 0 && companyDropDown.value !== bomOpt?.value) {
       console.log("[Script Keeper] Company already selected, skipping.");
       return false;
