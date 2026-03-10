@@ -69,11 +69,15 @@ function escHtml(str) {
  * Re-renders the macro list table from the current `macros` array.
  * Displays a placeholder row when there are no macros.
  */
+/**
+ * Re-renders the macro list table from the current `macros` array.
+ * Displays a placeholder row when there are no macros.
+ */
 function renderTable() {
   const tbody = document.getElementById("macroList");
   tbody.innerHTML = "";
   if (!macros.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;">No macros. Add one below.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">No macros. Add one below.</td></tr>';
     return;
   }
   macros.forEach((m, i) => {
@@ -86,6 +90,7 @@ function renderTable() {
       <td>${escHtml(m.subTypeText || "")}</td>
       <td>${escHtml(m.itemText || (m.autoDetectItem ? "(auto)" : ""))}</td>
       <td>${escHtml(m.stateText || "")}</td>
+      <td><code>${escHtml(m.hotkey || "—")}</code></td>
       <td>
         <button class="btn-sm btn-edit"   data-action="edit"   data-i="${i}">Edit</button>
         <button class="btn-sm btn-delete" data-action="delete" data-i="${i}">Delete</button>
@@ -122,6 +127,7 @@ function populateForm(i) {
   document.getElementById("fSubTypeText").value  = m.subTypeText || "";
   document.getElementById("fItemText").value     = m.itemText    || "";
   document.getElementById("fStateText").value    = m.stateText   || "";
+  document.getElementById("fHotkey").value       = m.hotkey      || "";
   document.getElementById("fId").disabled = true; // id shouldn't change on edit
   document.getElementById("formTitle").textContent = "Edit Macro";
   document.getElementById("btnSave").textContent   = "Update Macro";
@@ -136,6 +142,7 @@ function clearForm() {
   document.getElementById("editIndex").value = "-1";
   document.getElementById("macroForm").reset();
   document.getElementById("fId").disabled = false;
+  document.getElementById("fHotkey").value = "";
   document.getElementById("formTitle").textContent = "Add Macro";
   document.getElementById("btnSave").textContent   = "Save Macro";
 }
@@ -160,6 +167,8 @@ document.getElementById("macroForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const idx = parseInt(document.getElementById("editIndex").value, 10);
 
+  const hotkey = document.getElementById("fHotkey").value.trim();
+
   const entry = {
     id:          document.getElementById("fId").value.trim(),
     name:        document.getElementById("fName").value.trim(),
@@ -168,8 +177,18 @@ document.getElementById("macroForm").addEventListener("submit", async (e) => {
     typeText:    document.getElementById("fTypeText").value.trim(),
     subTypeText: document.getElementById("fSubTypeText").value.trim(),
     itemText:    document.getElementById("fItemText").value.trim(),
-    stateText:   document.getElementById("fStateText").value.trim()
+    stateText:   document.getElementById("fStateText").value.trim(),
+    hotkey:      hotkey || ""
   };
+
+  // Check for duplicate hotkey (ignore the entry being edited)
+  if (hotkey) {
+    const conflict = macros.find((m, i) => m.hotkey === hotkey && i !== idx);
+    if (conflict) {
+      showStatus(`Hotkey "${hotkey}" is already used by "${conflict.name}". Choose a different combo.`, "error");
+      return;
+    }
+  }
 
   if (idx === -1) {
     // Adding new — check for duplicate id
@@ -216,6 +235,65 @@ function showStatus(msg, type) {
   }
 }
 
+// --- Hotkey recorder ---
+
+/**
+ * Wires up the hotkey recorder input so that:
+ * - Clicking/focusing it enters "recording" mode (highlighted yellow).
+ * - The next non-modifier keypress (with at least one modifier held) is captured
+ *   and stored as the hotkey string (e.g. "Alt+1", "Ctrl+Shift+F2").
+ * - Pressing Escape clears the current value and exits recording mode.
+ * - Blurring without pressing a key leaves the existing value unchanged.
+ */
+function initHotkeyRecorder() {
+  const input = document.getElementById("fHotkey");
+  let recording = false;
+
+  input.addEventListener("focus", () => {
+    recording = true;
+    input.classList.add("recording");
+    input.dataset.prev = input.value;
+    input.value = "";
+    input.placeholder = "Press your key combo now…";
+  });
+
+  input.addEventListener("blur", () => {
+    recording = false;
+    input.classList.remove("recording");
+    // If nothing was recorded, restore the previous value
+    if (!input.value) input.value = input.dataset.prev || "";
+    input.placeholder = "Click here, then press a key combo…";
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (!recording) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.key === "Escape") {
+      input.value = "";
+      input.dataset.prev = "";
+      input.blur();
+      return;
+    }
+
+    // Ignore bare modifier keypresses
+    if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) return;
+
+    const parts = [];
+    if (e.ctrlKey)  parts.push("Ctrl");
+    if (e.altKey)   parts.push("Alt");
+    if (e.shiftKey) parts.push("Shift");
+    parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+
+    input.value = parts.join("+");
+    input.blur();
+  });
+}
+
 // --- Init ---
 
-document.addEventListener("DOMContentLoaded", loadMacros);
+document.addEventListener("DOMContentLoaded", () => {
+  loadMacros();
+  initHotkeyRecorder();
+});
