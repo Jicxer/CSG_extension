@@ -10,7 +10,7 @@
 # CONFIGURE THESE
 $REPO_PATH    = "C:\path\to\your\cloned\repo"   # Full path to cloned repo on host
 $GITHUB_REPO  = "YOUR_USERNAME/YOUR_REPO"        # e.g. "jicxer/my-extension"
-$BRANCH       = "jicxer-test"
+$BRANCH       = "jicxer-test"                     #What branch you're testing
 $POLL_SECONDS = 60
 $LOG_FILE     = "$PSScriptRoot\watcher-log.txt"
 # -----------------------------------------------
