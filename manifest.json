@@ -26,7 +26,7 @@
   ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["https://cc.cooksolutionsgroup.com/*"],
       "js": ["hotkeys.js"],
       "run_at": "document_idle"
     }
