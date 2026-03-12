@@ -136,6 +136,24 @@
     }
     #statusMsg.success { display: block; background: #d4edda; color: #155724; }
     #statusMsg.error   { display: block; background: #f8d7da; color: #721c24; }
+
+    /* Hotkey recorder */
+    .hotkey-input {
+      cursor: pointer;
+      background: #fafafa;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .hotkey-input.recording {
+      background: #fff8e1;
+      border-color: #f0ad4e;
+      box-shadow: 0 0 0 2px rgba(240,173,78,0.35);
+    }
+    .hotkey-hint {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -152,6 +170,7 @@
           <th>Sub-Type</th>
           <th>Item</th>
           <th>State</th>
+          <th>Hotkey</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -187,6 +206,14 @@
         <label>Sub-Type Text  <input type="text" id="fSubTypeText"  placeholder="e.g. Loitering"></label>
         <label>Item Text  <input type="text" id="fItemText"  placeholder="e.g. No Fraud Found"></label>
         <label>State Text  <input type="text" id="fStateText"  placeholder="e.g. Fixed and Closed"></label>
+      </div>
+
+      <div class="form-full" style="margin-top:10px;">
+        <label>Hotkey
+          <input type="text" id="fHotkey" class="hotkey-input" readonly
+                 placeholder="Click here, then press a key combo…">
+          <span class="hotkey-hint">Escape clears. Avoid plain letter keys — use at least one modifier (Alt, Ctrl, Shift).</span>
+        </label>
       </div>
 
       <div class="form-actions">
